@@ -1,3 +1,5 @@
+// Removed the import statement for bitcoinjs-lib and privateKeyToPublicKey function
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
   document.querySelector('#mineBlocks').addEventListener('click', mineBlocks);
@@ -5,25 +7,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let keyPairCounter = 0;
 
-async function generateKeyPair() {
+async function generateKeyPair(event) {
+  event.preventDefault();
+
   try {
-    const response = await fetch('http://203.18.30.236:8080/api/generate-keypair', {
-      method: 'POST',
+    const response = await fetch("http://203.18.30.236:8080/generate-keypair", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
-      throw new Error('Error generating key pair');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const keyPairData = await response.json();
-    addToKeyPairTable(keyPairData);
+    const result = await response.json();
+
+    const publicKey = result.publicKey; // Use the publicKey returned from the server
+
+    const keyPairTableBody = document.getElementById("keypairTableBody");
+    const row = document.createElement("tr");
+
+    const indexCell = document.createElement("td");
+    const publicKeyCell = document.createElement("td");
+    const privateKeyCell = document.createElement("td");
+    const addressCell = document.createElement("td");
+
+    indexCell.innerText = keyPairTableBody.children.length + 1;
+    publicKeyCell.innerText = publicKey;
+    privateKeyCell.innerText = result.privateKey;
+    addressCell.innerText = result.address;
+
+    row.appendChild(indexCell);
+    row.appendChild(publicKeyCell);
+    row.appendChild(privateKeyCell);
+    row.appendChild(addressCell);
+
+    keyPairTableBody.appendChild(row);
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
   }
 }
+
+// Rest of your code remains unchanged
+
+
+
 
 function addToKeyPairTable(keyPairData) {
   const tableBody = document.querySelector('#keypairTableBody');

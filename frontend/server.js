@@ -1,49 +1,24 @@
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
-
 const app = express();
-const port = 3000;
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, '/')));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors());
 
-// Add this function to handle key pair generation
-async function generateKeyPairHandler(req, res) {
-  // Add your code to generate a key pair here
-  // Send the key pair data in the response
-  res.json({
-    public_key: 'generated_public_key',
-    private_key: 'generated_private_key',
-  });
-}
+// Serve the static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/src', express.static(path.join(__dirname, 'src')));
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
-// Add this function to handle mining
-async function mineHandler(req, res) {
-  const selectedIndex = req.params.index;
 
-  // Add your code to mine 110 blocks to the address with selectedIndex
-  // Send the mined data in the response
-  res.json([
-    // Add the mined data here
-  ]);
-}
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
-// Define the routes and their handlers
-app.post('/api/generate-keypair', generateKeyPairHandler);
-app.post('/api/mine/:index', mineHandler);
-
-app.use(
-  '/rpc',
-  createProxyMiddleware({
-    target: 'http://localhost:18332',
-    pathRewrite: { '^/rpc': '' },
-    changeOrigin: true,
-    auth: 'bitcoin:bitcoin',
-  }),
-);
-
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
