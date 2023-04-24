@@ -1,17 +1,14 @@
-// Removed the import statement for bitcoinjs-lib and privateKeyToPublicKey function
-
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
   document.querySelector('#mineBlocks').addEventListener('click', mineBlocks);
 });
 
-let keyPairCounter = 0;
 
 async function generateKeyPair(event) {
   event.preventDefault();
 
   try {
-    const response = await fetch("http://203.18.30.236:8080/generate-keypair", {
+    const response = await fetch("http://203.18.30.236:8090/generate-keypair", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -23,8 +20,7 @@ async function generateKeyPair(event) {
     }
 
     const result = await response.json();
-
-    const publicKey = result.publicKey; // Use the publicKey returned from the server
+    const publicKey = result.publicKey;
 
     const keyPairTableBody = document.getElementById("keypairTableBody");
     const row = document.createElement("tr");
@@ -34,7 +30,10 @@ async function generateKeyPair(event) {
     const privateKeyCell = document.createElement("td");
     const addressCell = document.createElement("td");
 
-    indexCell.innerText = keyPairTableBody.children.length + 1;
+    // Define the index variable
+    const index = keyPairTableBody.children.length + 1;
+
+    indexCell.innerText = index;
     publicKeyCell.innerText = publicKey;
     privateKeyCell.innerText = result.privateKey;
     addressCell.innerText = result.address;
@@ -45,57 +44,37 @@ async function generateKeyPair(event) {
     row.appendChild(addressCell);
 
     keyPairTableBody.appendChild(row);
+
+    // Add options to the drop-down menu when new key pairs are generated
+    const keyPairSelector = document.querySelector('#keyPairSelector');
+    const newOption = document.createElement('option');
+    newOption.value = index;
+    newOption.innerText = `Index ${index}`;
+    keyPairSelector.appendChild(newOption);
   } catch (error) {
     console.error("Error:", error);
   }
-}
-
-// Rest of your code remains unchanged
-
-
-
-
-function addToKeyPairTable(keyPairData) {
-  const tableBody = document.querySelector('#keypairTableBody');
-  const newRow = document.createElement('tr');
-
-  // Add a new column for the index in each row
-  const indexCell = document.createElement('td');
-  keyPairCounter++;
-  indexCell.innerText = keyPairCounter;
-  newRow.appendChild(indexCell);
-
-  const publicKeyCell = document.createElement('td');
-  publicKeyCell.innerText = keyPairData.public_key;
-  newRow.appendChild(publicKeyCell);
-
-  const privateKeyCell = document.createElement('td');
-  privateKeyCell.innerText = keyPairData.private_key;
-  newRow.appendChild(privateKeyCell);
-
-  tableBody.appendChild(newRow);
-
-  // Add options to the drop-down menu when new key pairs are generated
-  const keyPairSelector = document.querySelector('#keyPairSelector');
-  const newOption = document.createElement('option');
-  newOption.value = keyPairCounter;
-  newOption.innerText = `Index ${keyPairCounter}`;
-  keyPairSelector.appendChild(newOption);
 }
 
 async function mineBlocks() {
   const keyPairSelector = document.querySelector('#keyPairSelector');
   const selectedIndex = keyPairSelector.value;
 
+  // Get the address from the table
+  const keyPairTableBody = document.getElementById("keypairTableBody");
+  const selectedRow = keyPairTableBody.children[selectedIndex - 1];
+  const addressCell = selectedRow.children[3];
+  const selectedAddress = addressCell.innerText;
+
   console.log(`Mining 110 blocks to address with index: ${selectedIndex}`);
 
   try {
-    const response = await fetch(`http://203.18.30.236:8080/api/mine-blocks`, {
+    const response = await fetch(`http://203.18.30.236:8090/api/mine-blocks`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ index: selectedIndex }),
+      body: JSON.stringify({ address: selectedAddress }),
     });
 
     if (!response.ok) {
@@ -103,43 +82,92 @@ async function mineBlocks() {
     }
 
     const minedData = await response.json();
-    populateSpendableTransactionOutputs(minedData);
+    console.log('Mined data:', minedData);
+    populateSpendableTransactionOutputs(minedData.transactions);
   } catch (error) {
     console.error('Error:', error);
   }
 }
 
-function populateSpendableTransactionOutputs(minedData) {
-  const stoTableBody = document.querySelector('#stoTable tbody');
+// Add this helper function to fetch transaction details from the Woc explorer API
+async function fetchTransactionDetails(txHash) {
+  const response = await fetch(`http://203.18.30.236:8090/api/proxy-transaction-details?txHash=${txHash}`);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error ${response.status}`);
+  }
 
-  minedData.forEach((output, index) => {
+  const txDetails = await response.json();
+  return txDetails;
+}
+
+async function populateSpendableTransactionOutputs(transactions) {
+  const stoTableBody = document.querySelector('#stoTable > tbody');
+  const keyPairSelector = document.querySelector('#keyPairSelector');
+  const selectedIndex = keyPairSelector.value;
+
+  // Get the private key from the table
+  const keyPairTableBody = document.getElementById("keypairTableBody");
+  const selectedRow = keyPairTableBody.children[selectedIndex - 1];
+  const privateKeyCell = selectedRow.children[2];
+  const selectedPrivateKey = privateKeyCell.innerText;
+
+  stoTableBody.innerHTML = ''; // clear the table before populating new data
+
+  for (const transaction of transactions) {
+    const txDetails = await fetchTransactionDetails(transaction.txid);
+    const output = txDetails.vout[0];
+
     const newRow = document.createElement('tr');
 
-    const indexCell = document.createElement('td');
-    indexCell.innerText = index;
-    newRow.appendChild(indexCell);
+    let cellIndex = newRow.insertCell();
+    cellIndex.innerText = transaction.n;
 
-    const txidCell = document.createElement('td');
-    txidCell.innerText = output.txid;
-    newRow.appendChild(txidCell);
+    let cellBlockHeight = newRow.insertCell();
+    cellBlockHeight.innerText = transaction.blockheight;
 
-    const satoshisCell = document.createElement('td');
-    satoshisCell.innerText = output.satoshis;
-    newRow.appendChild(satoshisCell);
+    let cellBlockHash = newRow.insertCell();
+    cellBlockHash.innerText = transaction.blockhash;
 
-    const lockingScriptCell = document.createElement('td');
-    lockingScriptCell.innerText = output.locking_script;
-    newRow.appendChild(lockingScriptCell);
+    let cellVout = newRow.insertCell();
+    cellVout.innerText = output.n;
 
-    const blocksSinceMinedCell = document.createElement('td');
-    blocksSinceMinedCell.innerText = output.blocks_since_mined;
-    newRow.appendChild(blocksSinceMinedCell);
+    let cellTxid = newRow.insertCell();
+    cellTxid.innerText = transaction.txid;
 
-    const privateKeyCell = document.createElement('td');
-privateKeyCell.innerText = output.private_key;
-newRow.appendChild(privateKeyCell);
+    let cellValue = newRow.insertCell();
+    cellValue.innerText = output.value;
 
-stoTableBody.appendChild(newRow);
+    let cellScriptPubKeyAsm = newRow.insertCell();
+    cellScriptPubKeyAsm.innerText = output.scriptPubKey.asm;
 
-});
+    let cellScriptPubKeyHex = newRow.insertCell();
+    cellScriptPubKeyHex.innerText = output.scriptPubKey.hex;
+
+    let cellReqSigs = newRow.insertCell();
+    cellReqSigs.innerText = output.scriptPubKey.reqSigs;
+
+    let cellConfirmations = newRow.insertCell();
+    cellConfirmations.innerText = transaction.confirmations;
+
+    let cellPrivateKey = newRow.insertCell();
+    cellPrivateKey.innerText = selectedPrivateKey;
+
+    newRow.appendChild(cellIndex);
+    newRow.appendChild(cellBlockHeight);
+    newRow.appendChild(cellBlockHash);
+    newRow.appendChild(cellVout);
+    newRow.appendChild(cellTxid);
+    newRow.appendChild(cellValue);
+    newRow.appendChild(cellScriptPubKeyAsm);
+    newRow.appendChild(cellScriptPubKeyHex);
+    newRow.appendChild(cellReqSigs);
+    newRow.appendChild(cellConfirmations);
+    newRow.appendChild(cellPrivateKey);
+
+    stoTableBody.appendChild(newRow);
+  }
 }
+
+
+
