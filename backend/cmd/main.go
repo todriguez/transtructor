@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -152,16 +151,8 @@ func generateKeyPairHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert WIF private key to hex string
-	privateKey, err := wifToHex(privateKeyWIF)
-	if err != nil {
-		log.Println("Error converting WIF private key to hex:", err)
-		http.Error(w, "Failed to convert WIF private key to hex", http.StatusInternalServerError)
-		return
-	}
-
 	// Convert private key to public key
-	publicKey, err := privateKeyToPublicKey(privateKey)
+	publicKey, err := privateKeyToPublicKey(privateKeyWIF)
 	if err != nil {
 		log.Println("Error converting private key to public key:", err)
 		http.Error(w, "Failed to convert private key to public key", http.StatusInternalServerError)
@@ -170,7 +161,7 @@ func generateKeyPairHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := map[string]string{
 		"address":    address,
-		"privateKey": privateKey,
+		"privateKey": privateKeyWIF, //Store privateKeyWIF instead of privateKey
 		"publicKey":  publicKey,
 	}
 
@@ -184,26 +175,28 @@ func generateKeyPairHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resultJSON)
 }
 
-func privateKeyToPublicKey(privateKey string) (string, error) {
-	privKeyBytes, err := hex.DecodeString(privateKey)
-	if err != nil {
-		return "", err
-	}
-
-	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
-	publicKey := privKey.PubKey()
-	publicKeyBytes := publicKey.SerializeCompressed()
-
-	return hex.EncodeToString(publicKeyBytes), nil
-}
-
-func wifToHex(privateKeyWIF string) (string, error) {
+/* func privateKeyWIFToPublicKey(privateKeyWIF string) (string, error) {
 	wif, err := btcutil.DecodeWIF(privateKeyWIF)
 	if err != nil {
 		return "", err
 	}
-	privateKeyBytes := wif.PrivKey.Serialize()
-	return hex.EncodeToString(privateKeyBytes), nil
+
+	publicKey := wif.PrivKey.PubKey()
+	publicKeyBytes := publicKey.SerializeCompressed()
+
+	return hex.EncodeToString(publicKeyBytes), nil
+} */
+
+func privateKeyToPublicKey(privateKeyWIF string) (string, error) {
+	wif, err := btcutil.DecodeWIF(privateKeyWIF)
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := wif.PrivKey.PubKey()
+	publicKeyBytes := publicKey.SerializeCompressed()
+
+	return hex.EncodeToString(publicKeyBytes), nil
 }
 
 // Add this function to your code
