@@ -1,0 +1,140 @@
+/* Reset default margin and padding values */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* Apply 5mm margin and padding to all divs */
+div {
+  margin: 5mm;
+  padding: 5mm;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Center-align p content and set its width to 80% */
+p {
+  margin: 2 auto;
+}
+
+/* Set body margins */
+body {
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+/* Reset default margin and padding values */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* Apply 5mm margin and padding to all divs */
+div {
+  margin: 5mm;
+  padding: 5mm;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Center-align p content and set its width to 80% */
+p {
+  margin: 2 auto;
+}
+
+/* Set body margins */
+body {
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+/* Set table styles */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+
+/* Set table head styles */
+table thead {
+  border-bottom: 2px solid #000;
+}
+
+/* Set table head cell styles */
+table th {
+  padding: 8px;
+  text-align: left;
+}
+
+/* Set table body row styles */
+table tbody tr {
+  border-bottom: 1px solid #ccc;
+}
+
+/* Set table body cell styles */
+table td {
+  padding: 8px;
+  text-align: left;
+}
+
+/* Set heading styles */
+h1, h2, h3, h4, h5, h6 {
+  background-color: #e0f7fa;
+  padding: 10px;
+  width: 100%;
+}
+
+/* Set light blue background color for h elements */
+h1, h2, h3, h4, h5, h6 {
+  background-color: #e0f7fa;
+}
+
+
+/* Set table column widths */
+table th:nth-child(1),
+table th:nth-child(2),
+table th:nth-child(4),
+table th:nth-child(6),
+table th:nth-child(9),
+table th:nth-child(10) {
+  width: 5%;
+}
+
+table th:nth-child(3),
+table th:nth-child(5) {
+  width: 15%;
+}
+
+table th:nth-child(7),
+table th:nth-child(8),
+table th:nth-child(11) {
+  width: 10%;
+}
+
+/* Set heading styles */
+h1, h2, h3, h4, h5, h6 {
+  background-color: #e0f7fa;
+  padding: 10px;
+  width: 100%;
+}
+
+/* Set light blue background color for h elements */
+h1, h2, h3, h4, h5, h6 {
+  background-color: #e0f7fa;
+}
+
+/* Set table styles */
+table {
+  table-layout: fixed;
+  word-wrap: break-word;
+  width: 100%;
+}
+
+/* Set table cell styles for TXID and Block Hash */
+table td:nth-child(3), table td:nth-child(5) {
+  word-break: break-all;
+}
+
+/* Set form labels styles */
+label {
+  font-weight: bold;
+  font-size: 120%;
+}
