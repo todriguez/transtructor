@@ -213,9 +213,6 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-
-
-
 function createTransactionFromForm() {
   const transaction = {
     version: getTransactionVersionValue(),
@@ -282,9 +279,9 @@ function createSighashPreimages(transaction) {
       const preimageParts = [
         transaction.version,
         toVarInt(transaction.inputs.length),
-        ...transaction.inputs.map(({ txid, vout, unlockScript, sequence }) => txid + vout + toVarInt(unlockScript.length / 2) + unlockScript + sequence),
+        ...transaction.inputs.map(({ txid, vout, unlockScriptSize, unlockScript, sequence }) => txid + vout + unlockScriptSize + unlockScript + sequence),
         toVarInt(transaction.outputs.length),
-        ...transaction.outputs.map(({ value, lockScript }) => value + toVarInt(lockScript.length / 2) + lockScript),
+        ...transaction.outputs.map(({ value, lockScriptSize, lockScript }) => value + lockScriptSize + lockScript),
         transaction.nLockTime,
         input.sighashFlag.padStart(2, '0'),
       ];
@@ -302,7 +299,7 @@ function createSighashPreimages(transaction) {
 
       if (!anyoneCanPay) {
         transactionJSON.inputCount = transaction.inputs.length;
-        transactionJSON.inputs = transaction.inputs.map(({ txid, vout, unlockScript, sequence }) => ({ txid, vout, unlockScript, sequence }));
+        transactionJSON.inputs = transaction.inputs.map(({ txid, vout, unlockScriptSize, unlockScript, sequence }) => ({ txid, vout, unlockScriptSize, unlockScript, sequence }));
       } else {
         transactionJSON.inputs = [{ ...transaction.inputs[index] }];
       }
@@ -311,21 +308,22 @@ function createSighashPreimages(transaction) {
         case SIGHASH_ALL:
         case SIGHASH_ALL_ANYONECANPAY:
           transactionJSON.outputCount = transaction.outputs.length;
-          transactionJSON.outputs = transaction.outputs.map(({ value, lockScript }) => ({ value, lockScript }));
+          transactionJSON.outputs = transaction.outputs.map(({ value, lockScriptSize, lockScript }) => ({ value, lockScriptSize, lockScript }));
           break;
         case SIGHASH_NONE:
         case SIGHASH_NONE_ANYONECANPAY:
           break;
         case SIGHASH_SINGLE:
         case SIGHASH_SINGLE_ANYONECANPAY:
-          if (index < transaction.outputs.length) {
+          if (index <= transaction.outputs.length - 1) {
             transactionJSON.outputs = [{ ...transaction.outputs[index] }];
+          } else {
+            throw new Error(`SIGHASH_SINGLE cannot be used when input number is greater than output number.`);
           }
           break;
         default:
           throw new Error(`Unsupported SIGHASH flag: ${input.sighashFlag}`);
       }
-      
       
       return { serializedPreimage, transactionJSON };
     });
@@ -336,6 +334,8 @@ function createSighashPreimages(transaction) {
     return [];
   }
 }
+
+
 
 
 
