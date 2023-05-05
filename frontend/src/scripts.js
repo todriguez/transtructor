@@ -1,44 +1,10 @@
-/* document.addEventListener("DOMContentLoaded", function () {
-  const displayPreImagesButton = document.getElementById("displayPreImagesButton");
-  if (displayPreImagesButton) {
-    displayPreImagesButton.addEventListener("click", async function () {
-      const transaction = createTransactionFromForm();
-      const stoData = [
-        // Your STO JSON data
-      ];
-      const transactionForm = document.querySelector("#transactionForm");
-      const preimages = await createSighashPreImages(transaction, stoData);
-      displayPreImages(preimages);
-    });
-  }
-}); */
-
-document.querySelectorAll('.hashButton').forEach((button) => {
-  button.addEventListener('click', async (event) => {
-    const formData = 'your-form-data'; // Replace this with the serialized form data
-
-    const hash = await callBackendHashing(formData);
-    // Display the hash in the form
-    // You'll need to add an input element for each Preimage JSON container to display the hash
-    event.target.parentElement.querySelector('.hashResult').value = hash;
-  });
-});
-
-/* document.getElementById("processTransactionDataButton").addEventListener("click", () => {
-  // Create transaction object from form data
-  const transaction = createTransactionFromForm();
-
-  // Get the input count from the transaction object
-  const inputCount = transaction.inputs.length;
-
-  // Call the displayPreImages function with the input count
-  displayPreImages(inputCount);
-}); */
-
 document.getElementById("processTransactionDataButton").addEventListener("click", () => {
   const inputCount = parseInt(document.querySelector("#inputCount").value); // Get input count from the form
-  displayPreImages(inputCount);
+  const transaction = createTransactionFromForm(); // Create transaction object from the form data
+  displayTransactionJSON(transaction); // Display the transaction JSON object
+  displayPreImages(inputCount); // Create preimage containers
 });
+
 
 
 
@@ -62,6 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
     displaySighashes(sighashes);
   });
 });
+
+document.getElementById("inputCount").addEventListener("change", (event) => {
+  createInputContainers(event);
+});
+
+document.getElementById("outputCount").addEventListener("change", (event) => {
+  createOutputContainers(event);
+});
+
+// Add the following lines to clear the default containers on page load
+window.addEventListener("load", () => {
+  document.getElementById("inputContainers").innerHTML = "";
+  document.getElementById("outputContainers").innerHTML = "";
+});
+
 
 
 // Add event listeners to the buttons
@@ -291,10 +272,11 @@ function getElementValueById(id, index) {
   if (index === undefined) {
     element = document.getElementById(id) || document.getElementById(capitalizeFirstLetter(id));
   } else {
-    element = document.getElementById(`${id}-${index}`) || document.getElementById(`${capitalizeFirstLetter(id)}-${index}`);
+    element = document.querySelector(`input[id^="${id}-${index}"], input[id^="${capitalizeFirstLetter(id)}-${index}"]`);
   }
   return element ? element.value : null;
 }
+
 
 
 
@@ -303,9 +285,6 @@ function capitalizeFirstLetter(string) {
 }
 
 function createTransactionFromForm() {
-  const transaction = {
-    version: getTransactionVersionValue(),
-  };
   const transactionLockTime = document.querySelector("#nLockTime").value;
 
   const inputCount = parseInt(document.querySelector('#inputCount').value);
@@ -313,40 +292,83 @@ function createTransactionFromForm() {
   for (let i = 0; i < inputCount; i++) {
     const inputElement = document.getElementById(`inputContainer-${i}`);
     if (inputElement) {
-      inputs.push({
+      const input = {
         txid: getElementValueById('inputTXID', i),
         vout: getElementValueById('inputVOUT', i),
         sequence: getElementValueById('inputSequence', i),
         unlockScriptSize: getElementValueById('inputUnlockScriptSize', i),
         unlockScript: getElementValueById('inputUnlockScript', i),
         sighashFlag: getElementValueById('sighashFlag', i)
-      });
+      };
+      inputs.push(input);
+      console.log('Input:', input);
     }
-     // Add inputs to the transaction object
-  transaction.inputs = inputs;
-
-  // Return the transaction object
-  return transaction;
-}
-  
+  }
 
   const outputCount = parseInt(document.querySelector('#outputCount').value);
   const outputs = [];
   for (let i = 0; i < outputCount; i++) {
     const outputElement = document.getElementById(`outputContainer-${i}`);
     if (outputElement) {
-      outputs.push({
+      const output = {
         value: getElementValueById('outputValue', i),
         lockScriptSize: getElementValueById('outputlockScriptSize', i),
         lockScript: getElementValueById('outputlockScript', i),
-      });
+      };
+      outputs.push(output);
+      console.log('Output:', output);
     }
   }
 
-  return { ...transaction, inputs, outputs, nLockTime: transactionLockTime };
+  const transaction = {
+    version: getTransactionVersionValue(),
+    inputCount: inputCount,
+    inputs: inputs,
+    outputCount: outputCount,
+    outputs: outputs,
+    nLockTime: transactionLockTime,
+  };
 
-  
+  return transaction;
 }
+
+function getInputs() {
+  const inputCount = parseInt(document.getElementById("inputCount").value, 16);
+  const inputs = [];
+
+  for (let i = 0; i < inputCount; i++) {
+    const prevoutHash = document.getElementById(`inputTXID-${i}`).value;
+    const prevoutN = document.getElementById(`inputVOUT-${i}`).value;
+    const unlockScriptSize = unlockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
+    const unlockScript = document.getElementById(`inputUnlockScript-${i}`).value;
+    const sequence = document.getElementById(`inputSequence-${i}`).value;
+    const sighashFlag = document.getElementById(`sighashFlag-${i}`).value;
+
+
+    inputs.push({ prevoutHash, prevoutN, unlockScript, sequence, sighashFlag, unlockScriptSize });
+  }
+
+  return inputs;
+}
+
+function getOutputs() {
+  const outputCount = parseInt(document.getElementById("outputCount").value, 16);
+  const outputs = [];
+
+  for (let i = 0; i < outputCount; i++) {
+    const value = document.getElementById(`outputValue-${i}`).value;
+    const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
+    const lockScript = document.getElementById(`outputlockScript-${i}`).value;
+
+
+    outputs.push({ value, lockScript, lockScriptSize });
+  }
+
+  return outputs;
+}
+
+
+
 
 const stoData = [
   // Your STO JSON data
@@ -409,69 +431,68 @@ async function hashSingleOutput(output) {
   return await callBackendHashing(buffer);
 }
 
-
-
-/* async function createSighashPreImages(transaction, stoData) {
-  const preimages = [];
-  for (let i = 0; i < transaction.inputs.length; i++) {
-    const input = transaction.inputs[i];
-    const sighashFlag = parseInt(input.sighashFlag);
-
-    // Create a preimage object based on the SIGHASH flag and input data
-    const preimage = {
-      nVersion: transaction.version,
-      hashPrevouts: (sighashFlag & 0x80) ? '0000000000000000000000000000000000000000000000000000000000000000' : await hashPrevouts(transaction.inputs),
-      hashSequence: (sighashFlag & 0x80 || (sighashFlag & 0x1f) === 0x02 || (sighashFlag & 0x1f) === 0x03) ? '0000000000000000000000000000000000000000000000000000000000000000' : await hashSequence(transaction.inputs),
-      outpoint: input.txid + input.vout,
-      scriptCode: input.unlockScriptSize + input.unlockScript,
-      value: input.value,
-      nSequence: input.sequence,
-      hashOutputs: (sighashFlag & 0x1f) === 0x01 ? await hashOutputs(transaction.outputs) : (sighashFlag & 0x1f) === 0x03 ? await hashSingleOutput(transaction.outputs[i]) : '0000000000000000000000000000000000000000000000000000000000000000',
-      nLockTime: transaction.nLockTime,
-      nHashType: input.sighashFlag
-    };
-    preimages.push(preimage);
-  }
-  return preimages;
-} */
-
 function displayPreImages(inputCount) {
   const preimagesContainer = document.getElementById("preimagesContainer");
 
   // Remove existing preimage JSON containers
-  preimagesContainer.querySelectorAll(".preimageJSON").forEach((container) => {
-    preimagesContainer.removeChild(container);
-  });
+  preimagesContainer.innerHTML = "";
 
   // Create new preimage JSON containers
   const preimageJSONTemplate = document.getElementById("preimageJSONTemplate");
   for (let i = 0; i < inputCount; i++) {
-    const newContainer = preimageJSONTemplate.content.cloneNode(true);
-    newContainer.querySelector(".preimageIndex").textContent = i + 1;
+    const newPreimageJSON = preimageJSONTemplate.content.cloneNode(true);
+    newPreimageJSON.querySelector(".preimageIndex").textContent = i + 1;
+
+    // Add collapsible behavior
+    const collapseButton = newPreimageJSON.querySelector(".preimageToggle");
+    collapseButton.setAttribute("data-bs-target", `#preimageContent-${i}`);
+
+    const collapseContent = newPreimageJSON.querySelector(".preimageContent");
+    collapseContent.id = `preimageContent-${i}`;
 
     // Set unique IDs for each form field
-    const formFields = newContainer.querySelectorAll(".form-control");
+    const formFields = newPreimageJSON.querySelectorAll(".form-control");
     formFields.forEach((field) => {
       field.id = field.classList.item(1) + "-" + i;
     });
 
-    // Set unique ID for each hash button
-    const hashButtons = newContainer.querySelectorAll(".hashButton");
-    hashButtons.forEach((button, index) => {
-      button.id = "hashButton-" + index + "-" + i;
+    // Add event listener to the hash buttons
+    const hashButtons = newPreimageJSON.querySelectorAll(".hashButton");
+    hashButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        let previousField, nextField;
+        if (button.classList.contains("hashPrevoutsButton")) {
+          previousField = button.parentElement.querySelector(".Prevouts");
+          nextField = button.parentElement.querySelector(".hashPrevouts");
+        } else if (button.classList.contains("hashSequenceButton")) {
+          previousField = button.parentElement.querySelector(".Sequence");
+          nextField = button.parentElement.querySelector(".hashSequence");
+        }
+        const hashedValue = await callBackendHashing(previousField.value);
+        nextField.value = hashedValue;
+      });
     });
 
-    preimagesContainer.appendChild(newContainer);
+    preimagesContainer.appendChild(newPreimageJSON);
   }
 }
 
 
 
 
-
-
-
-
+async function handleHashButtonClick(event) {
+  const button = event.target;
+  let previousField, nextField;
+  if (button.classList.contains("hashPrevoutsButton")) {
+    previousField = button.parentElement.querySelector(".Prevouts");
+    nextField = button.parentElement.querySelector(".hashPrevouts");
+  } else if (button.classList.contains("hashSequenceButton")) {
+    previousField = button.parentElement.querySelector(".Sequence");
+    nextField = button.parentElement.querySelector(".hashSequence");
+  }
+  const hashedValue = await callBackendHashing(previousField.value);
+  nextField.value = hashedValue;
+}
 
 function parseVarInt(hex, start) {
   const firstByte = parseInt(hex.substr(start * 2, 2), 16);
@@ -494,7 +515,6 @@ function parseVarInt(hex, start) {
 
   return { value, size };
 }
-
 
 function toVarInt(value) {
   if (value < 0xfd) {
@@ -529,11 +549,7 @@ document.getElementById("outputCount").addEventListener("change", (event) => {
 });
 
 
-function updateInputOrOutputContainers(containerType, event) {
-  if (event) {
-    event.preventDefault();
-  }
-
+function updateInputOrOutputContainers(containerType) {
   const countField = document.querySelector(`#${containerType}Count`);
   const countHex = countField.value;
   const count = parseInt(parseVarInt(countHex, 0).value, 16);
@@ -543,67 +559,149 @@ function updateInputOrOutputContainers(containerType, event) {
 
   if (count <= maxCount) {
     const containers = document.getElementById(`${containerType}Containers`);
-    const containerTemplate = document.getElementById(`${containerType}ContainerTemplate`);
 
-    // Remove existing containers with the same type
-    containers.querySelectorAll(`.${containerType}Container`).forEach((container) => {
-      containers.removeChild(container);
-    });
+    // Clear the containers div before adding new ones
+    containers.innerHTML = "";
+
+    const containerTemplate = document.getElementById(`${containerType}ContainerTemplate`);
 
     for (let i = 0; i < count; i++) {
       const newContainer = containerTemplate.content.cloneNode(true);
-      newContainer.firstElementChild.id = `${containerType}Container-${i}`;
-      newContainer.firstElementChild.classList.add(`${containerType}Container`);
-  
+      newContainer.querySelector(`.${containerType}Index`).textContent = i + 1;
+
+      // Add collapsible behavior
+      const collapseButton = newContainer.querySelector(`button[data-bs-toggle="collapse"]`);
+      collapseButton.setAttribute("data-bs-target", `#${containerType}Content-${i}`);
+
+      const collapseContent = newContainer.querySelector(".collapse");
+      collapseContent.id = `${containerType}Content-${i}`;
+
       // Set unique ids for the fields
       newContainer.querySelectorAll("input, select").forEach((element) => {
         const name = element.getAttribute("name");
         element.id = `${name}-${i}`;
       });
-  
+
+      // Append the new container as a child of the parent div
       containers.appendChild(newContainer);
     }
-  } else {
-    alert(`You can add a maximum of 5 ${containerType} containers.`);
   }
+
+  // Update preimage JSON containers when input count changes
+  if (containerType === "input") {
+    displayPreImages(count);
+  }
+}
+
+
+function displayTransactionJSON(transaction) {
+  const transactionJSONContainer = document.getElementById("transactionJSONContainer");
+
+  // Remove the existing transaction JSON data if it exists
+  const existingTransactionData = transactionJSONContainer.querySelector("pre");
+  if (existingTransactionData) {
+    transactionJSONContainer.removeChild(existingTransactionData);
+  }
+
+  // Create a pre element to display the transaction JSON data
+  const transactionJSONData = document.createElement("pre");
+  transactionJSONData.innerText = JSON.stringify(transaction, null, 2);
+
+  // Append the pre element to the transaction JSON container
+  transactionJSONContainer.appendChild(transactionJSONData);
 }
 
 
 
 
-/* const SIGHASH_ALL = '41';
-const SIGHASH_NONE = '42';
-const SIGHASH_SINGLE = '43';
-const ANYONECANPAY = '80';
 
-const SIGHASH_ALL_ANYONECANPAY = SIGHASH_ALL | ANYONECANPAY;
-const SIGHASH_NONE_ANYONECANPAY = SIGHASH_NONE | ANYONECANPAY;
-const SIGHASH_SINGLE_ANYONECANPAY = SIGHASH_SINGLE | ANYONECANPAY;
+async function displayPreimageJSONGallery(transaction, spendableTransactionOutputs) {
+  const preimagesContainer = document.getElementById("preimagesContainer");
+  preimagesContainer.innerHTML = ""; // clear the container before populating new data
 
-async function callBackendHashing(hexString) {
-  const buffer = new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
-  const firstHash = new Uint8Array(await crypto.subtle.digest('SHA-256', buffer));
-  const secondHash = new Uint8Array(await crypto.subtle.digest('SHA-256', firstHash));
-  return Array.from(secondHash).map(b => b.toString(16).padStart(2, '0')).join('');
-} */
+  const preimageJSONs = [];
 
-/* function displaySighashes(sighashes) {
-  const sighashContainer = document.getElementById("sighashContainer");
-  sighashContainer.innerHTML = ""; // Clear previous content
+  // Iterate over the transaction inputs
+  for (let i = 0; i < transaction.inputs.length; i++) {
+    const input = transaction.inputs[i];
+    const spendableTransactionOutput = spendableTransactionOutputs[i];
 
-  sighashes.forEach((sighash, index) => {
-    const sighashDiv = document.createElement("div");
-    sighashDiv.classList.add("mb-3");
+    // Generate the preimage JSON objects for each SIGHASH flag
+    const preimageJSON = {
+      nVersion: transaction.version,
+      // ... populate the other fields depending on the SIGHASH flag
+    };
 
-    const sighashLabel = document.createElement("label");
-    sighashLabel.textContent = `Input ${index + 1} Sighash:`;
-    sighashDiv.appendChild(sighashLabel);
+    preimageJSONs.push(preimageJSON);
+  }
 
-    const sighashPre = document.createElement("pre");
-    sighashPre.classList.add("border", "p-2");
-    sighashPre.textContent = sighash;
-    sighashDiv.appendChild(sighashPre);
-
-    sighashContainer.appendChild(sighashDiv);
+  // Display preimage JSON objects in a paginated gallery
+  preimageJSONs.forEach((preimageJSON, index) => {
+    const preimageElement = document.createElement("pre");
+    preimageElement.id = `preimage-json-${index + 1}`;
+    preimageElement.className = "preimage-json";
+    preimageElement.style.display = index === 0 ? "block" : "none";
+    preimageElement.innerText = JSON.stringify(preimageJSON, null, 2);
+    preimagesContainer.appendChild(preimageElement);
   });
-} */
+
+  // Create pagination navigation
+  const paginationNav = document.createElement("div");
+  paginationNav.className = "pagination-nav";
+
+  preimageJSONs.forEach((_, index) => {
+    const navLink = document.createElement("a");
+    navLink.href = "#";
+    navLink.innerText = index + 1;
+    navLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      showPreimageElement(index);
+    });
+
+    paginationNav.appendChild(navLink);
+  });
+
+  preimagesContainer.appendChild(paginationNav);
+
+  // Return the preimage JSON objects
+  return preimageJSONs;
+}
+
+function showPreimageElement(index) {
+  const preimageElements = document.querySelectorAll(".preimage-json");
+
+  preimageElements.forEach((element, i) => {
+    element.style.display = i === index ? "block" : "none";
+  });
+}
+ 
+async function processTransactionData() {
+  const version = document.getElementById("version").value;
+  const inputCount = document.getElementById("inputCount").value;
+  const inputs = getInputs();
+  const outputCount = document.getElementById("outputCount").value;
+  const outputs = getOutputs();
+  const nLockTime = document.getElementById("nLockTime").value;
+
+  const payload = {
+    version,
+    inputCount,
+    inputs,
+    outputCount,
+    outputs,
+    nLockTime,
+  };
+
+  console.log("Transaction Payload:", JSON.stringify(payload, null, 2));
+
+  // Display the transaction JSON payload in the browser
+  displayTransactionJSON(payload);
+
+  // Call the backend service to process the transaction data
+}
+
+// Add the event listener for the "Process Transaction Data" button
+document.getElementById("processTransactionDataButton").addEventListener("click", processTransactionData);
+
+
+

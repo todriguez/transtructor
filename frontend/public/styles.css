@@ -168,3 +168,113 @@ label {
 .pagination-nav a:hover {
   background-color: #eee;
 }
+
+#inputContainersWrapper,
+#outputContainersWrapper {
+  margin: 0;
+  padding: 0;
+}
+
+.inputContainer,
+.outputContainer {
+  margin-top: 1rem;
+}
+
+h2 {
+  margin-bottom: 0;
+}
+
+/* Add custom bottom margin to the "Outputs:" button */
+.custom-output-button {
+  margin-bottom: 0.5rem;
+}
+
+#inputContainers,
+#outputContainersContent {
+  margin: 0;
+  padding: 0;
+}
+
+/* Center the headings and give them a background color */
+h1, h2, h3 {
+  text-align: center;
+  background-color: #f2f2f2;
+  padding: 10px 0;
+}
+
+/* Remove underline from headings */
+h1, h2, h3 {
+  text-decoration: none;
+}
+
+/* Add cursor pointer to indicate that headings are clickable */
+h1, h2, h3 {
+  cursor: pointer;
+}
+
+/* ... previous CSS rules ... */
+
+.preimageToggle {
+  text-decoration: none;
+  color: inherit;
+  display: inline;
+}
+
+.hashButton {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Preimage container styles */
+.preimageContainer {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Preimage JSON template */
+.preimageJSON {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  width: 100%; /* Add this line */
+}
+
+
+/* Preimage header styles */
+.preimageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Preimage index styles */
+.preimageIndex {
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+/* Preimage content styles */
+.preimageContent {
+  margin-top: 1rem;
+}
+
+/* Form group styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+/* Form label styles */
+.form-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* ...remaining CSS rules... */

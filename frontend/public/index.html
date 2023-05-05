@@ -32,122 +32,129 @@
             <label for="keyPairSelector" class="form-label">Select key pair index:</label>
                 <select class="form-select" id="keyPairSelector" name="keyPairSelector">
                 </select>
-                <button id="mineBlocks" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Mine Blocks</button>
-                <div id="spendableTransactionOutputs" class="mt-4">
-                    <h2 style="text-align: center;">Spendable Transaction Outputs</h2>
-                <div id="stoContainer"></div>
-                </div>
-                
-                </div>
-        
-
-        <div id="transactionContainer" class="mt-4">
-        <h1 style="text-align: center;">Create Transaction</h1>
-            <form id="transactionForm" onsubmit="return false;">
-                <div class="mb-3">
-                    <label for="Version" class="form-label">Version:</label>
-                    <input type="text" class="form-control" id="version" name="Version">
-                     
-                </div>
-                
+                        <button id="mineBlocks" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Mine Blocks</button>
+                        <div id="spendableTransactionOutputs" class="mt-4">
+                        <h2 style="text-align: center;">Spendable Transaction Outputs</h2>
+                        <div id="stoContainer"></div>
+                        </div>
+                        <div id="transactionContainer" class="mt-4">
+                        <button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#transactionContent">
+                            <h1 style="text-align: center;">Create Transaction</h1>
+                        </button>
+                        <div id="transactionContent" class="collapse show">
+                            <form id="transactionForm">
+                        <div class="mb-3">
+                          <label for="Version" class="form-label">Version:</label>
+                          <input type="text" class="form-control" id="version" name="Version">
+                        </div>
                 <div class="mb-3">
                     <label for="inputCount" class="form-label">Input Count:</label>
                     <input type="text" class="form-control" id="inputCount" name="inputCount">
                 </div>
 
-                
-    <template id="inputContainerTemplate">
-        <div id="inputContainer" class="mt-4">
-            <h3>Input</h3>
-            <div class="mb-3">
-                <label for="inputTXID-0" class="form-label">TXID:</label>
-                <input type="text" class="form-control" name="inputTXID" id="inputTXID-0">
-                    <p>Enter the TXID that contains the outputs you want to spend. This will be a 32 byte Little Endian value.</p>
-                </div>
-                <div class="mb-3">
-                    <label for="inputVOUT-0" class="form-label">VOUT:</label>
-                    <input type="text" class="form-control" name="inputVOUT" id="inputVOUT-0">
-                    <p>The VOUT refers to the index position of the Transaction Output you want to spend from amongst whichever additional outputs were generated when the initial transaction was created. In this case all our Spendable Transaction Outputs are coinbase with only one output so their VOUT will be 0 as the first position in the transaction outputs. This needs to be entered as a 4 byte Little Endian value.</p>
-                    
-                </div>
-                
-                <div class="mb-3">
-                    <label for="inputUnlockScriptSize-0" class="form-label">Unlock Script Size:</label>
-                    <input type="text" class="form-control" name="inputUnlockScriptSize" id="inputUnlockScriptSize-0">
-                    
-                    
-                </div>
-                <div class="mb-3">
-                    <label for="inputUnlockScript-0" class="form-label">Unlock Script:</label>
-                    <input type="text" class="form-control" name="inputUnlockScript" id="inputUnlockScript-0">
-                    <p>At this point, this is the lockScript of the output being spent in hexadecimal.</p>
-                </div>
-                <div class="mb-3">
-                    <label for="inputSequence-0" class="form-label">Sequence:</label>
-                    <input type="text" class="form-control" name="inputSequence" id="inputSequence-0">
-                    
-                    
-                </div>       
-                <div class="mb-3">
-                    <label for="sighashFlag-0" class="form-label">SIGHASH Flag:</label>
-                    <input type="text" id="sighashFlag-0" name="sighashFlag" placeholder="Enter sighash flag (e.g. 41, 42, 43)" class="form-control" />
-                    
-                          
-        </div>
-    </template> 
-    <input type="hidden" id="currentInputIndex" value="1">           
-    <div id="inputContainers"></div>
+                <template id="inputContainerTemplate">
+                    <div class="inputContainer mt-4">
+                        <button type="button" class="btn btn-link p-0 inputToggle" data-bs-toggle="collapse">
+                            <h3>Input #<span class="inputIndex"></span></h3>
+                        </button>
+                        <div class="collapse show inputContent">
+                            <div class="mb-3">
+                                <label for="inputTXID-0" class="form-label">TXID:</label>
+                                <input type="text" class="form-control" name="inputTXID" id="inputTXID-0">
+                                <p>Enter the TXID that contains the outputs you want to spend. This will be a 32 byte Little Endian value.</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="inputVOUT-0" class="form-label">VOUT:</label>
+                                <input type="text" class="form-control" name="inputVOUT" id="inputVOUT-0">
+                                <p>The VOUT refers to the index position of the Transaction Output you want to spend from amongst whichever additional outputs were generated when the initial transaction was created. In this case all our Spendable Transaction Outputs are coinbase with only one output so their VOUT will be 0 as the first position in the transaction outputs. This needs to be entered as a 4 byte Little Endian value.</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="inputUnlockScriptSize-0" class="form-label">Unlock Script Size:</label>
+                                <input type="text" class="form-control" name="inputUnlockScriptSize" id="inputUnlockScriptSize-0">
+                            </div>
+                            <div class="mb-3">
+                                <label for="inputUnlockScript-0" class="form-label">Unlock Script:</label>
+                                <input type="text" class="form-control" name="inputUnlockScript" id="inputUnlockScript-0">
+                                <p>At this point, this is the lockScript of the output being spent in hexadecimal.</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="inputSequence-0" class="form-label">Sequence:</label>
+                                <input type="text" class="form-control" name="inputSequence" id="inputSequence-0">
+                            </div>       
+                            <div class="mb-3">
+                                <label for="sighashFlag-0" class="form-label">SIGHASH Flag:</label>
+                                <input type="text" id="sighashFlag-0" name="sighashFlag" placeholder="Enter sighash flag (e.g. 41, 42, 43)" class="form-control" />  
+                            </div>
+                        </div>
+                    </div>
+                </template>
+        <input type="hidden" id="currentInputIndex" value="1">           
+        <button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#inputContainersWrapper">
+        <h2>Inputs:</h2>
+      </button>
+      <div id="inputContainersWrapper" class="collapse show">
+        <div id="inputContainers"></div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="outputCount" class="form-label">Output Count:</label>
+        <input type="text" class="form-control" id="outputCount" name="outputCount">
+    </div>
 
-                <div class="mb-3">
-                    <label for="outputCount" class="form-label">Output Count:</label>
-                    <input type="text" class="form-control" id="outputCount" name="outputCount">
-                    <p>"Output Count" is a varInt which specifies the number of outputs that will be generated by the transaction. This will be either a 1, 3, 5, or 9 byte value.</p>
-                </div>
+    
 
     <template id="outputContainerTemplate">
-        <div id="outputContainer" class="mt-4">
-            <h3>Output</h3>
-            <div class="mb-3">
-              <label for="outputValue-0" class="form-label">Value:</label>
-              <input type="text" class="form-control" name="outputValue" id="outputValue-0">
-                         <p>"Value" is an 8 byte Little Endian value designating the value in satoshis for the transaction output. This will need to be less than the value of the inputs, with an appropriate difference that will be collected by the mining node. The RegTest Node has a minminingtxfee=0.00000050 or 50 sats.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="outputlockScriptSize-0" class="form-label">lockScript Size:</label>
-                        <input type="text" class="form-control" name="ouputlockScriptSize" id="outputlockScriptSize-0">
-                        <p>This is the length of the script that the payee choses to encumber the satoshis of the output behind.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="outputlockScript-0" class="form-label">lockScript:</label>
-                        <input type="text" class="form-control" name="outputlockScript" id="outputlockScript-0">
-                        <p>This is the script that needs to be solved to onspend the satoshis of the output.</p>
-                        <p>This is where the real magic of bitcoin happens, as this script can require the provision of any calculable number in Bitcoin's native language, Script.</p>
-                        <p>Bitcoin Script consists of 186 opcodes which can be used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation. </p>
-                    </div>
-                        
-                    </div>
-                <div>
-        </div>
-    </template>            
-    <div id="outputContainers"></div>
-                
-                    <h3>nLockTime</h3>
+        <div class="outputContainer mt-4">
+            <button type="button" class="btn btn-link p-0 outputToggle" data-bs-toggle="collapse">
+                <h3>Output #<span class="outputIndex"></span></h3>
+            </button>
+            <div class="collapse show outputContent">
                 <div class="mb-3">
-                    <label for="nLockTime" class="form-label">nLockTime:</label>
-                    <input type="text" class="form-control" id="nLockTime" name="nLockTime">
-                    <p>nLockTime is a 4 byte Little Endian value.</p>
-                    <p>If the value of the transaction’s nLockTime field is less than 500,000,000 then the field represents a block height.</p>
-                    <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
+                    <label for="outputValue-0" class="form-label">Value:</label>
+                    <input type="text" class="form-control" name="outputValue" id="outputValue-0">
+                     <p>"Value" is an 8 byte Little Endian value designating the value in satoshis for the transaction output. This will need to be less than the value of the inputs, with an appropriate difference that will be collected by the mining node. The RegTest Node has a minminingtxfee=0.00000050 or 50 sats.</p>
                 </div>
-
-                <button id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
-               
+                <div class="mb-3">
+                    <label for="outputlockScriptSize-0" class="form-label">lockScript Size:</label>
+                    <input type="text" class="form-control" name="ouputlockScriptSize" id="outputlockScriptSize-0">
+                    <p>This is the length of the script that the payee choses to encumber the satoshis of the output behind.</p>
+                </div>
+                <div class="mb-3">
+                    <label for="outputlockScript-0" class="form-label">lockScript:</label>
+                    <input type="text" class="form-control" name="outputlockScript" id="outputlockScript-0">
+                    <p>This is the script that needs to be solved to onspend the satoshis of the output.</p>
+                    <p>This is where the real magic of bitcoin happens, as this script can require the provision of any calculable number in Bitcoin's native language, Script.</p>
+                    <p>Bitcoin Script consists of 186 opcodes which can be used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation. </p>
+                </div>
             </div>
+        </div>
+        </template>
+        <input type="hidden" id="currentOutputIndex" value="1">
+        <button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#outputContainersWrapper">
+        <h2>Outputs:</h2>
+        </button>
+            <div id="outputContainersWrapper" class="collapse show">
+                <div id="outputContainers"></div>
+
+                
+                        <div class="mb-3">
+                            <label for="nLockTime" class="form-label">nLockTime:</label>
+                            <input type="text" class="form-control" id="nLockTime" name="nLockTime">
+                            <p>nLockTime is a 4 byte Little Endian value.</p>
+                            <p>If the value of the transaction’s nLockTime field is less than 500,000,000 then the field represents a block height.</p>
+                            <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
+                        </div>
+            </div>
+            <button type="button" id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
+        </div>
                 </div>
                 <div>
                     <!-- Preimage Container -->
                     <div class="container mt-5">
                         <h2>Preimages</h2>
+
+                        <div id="transactionJSONContainer" class="mt-4"></div>
+
                         <p>Click the button below to generate SIGHASH preimages for the transaction.</p>
                         <button id="displayPreImagesButton" class="btn btn-primary mb-3">Generate Preimages</button>
                         <div id="preimagesContainer" class="row">
@@ -157,62 +164,67 @@
                     
                     <!-- Preimage JSON Container Template -->
                     <template id="preimageJSONTemplate">
-                        <div class="col-md-4 preimageJSON">
-                          <h4>Preimage #<span class="preimageIndex"></span></h4>
-                          <form class="preimageForm">
-                            <div class="form-group">
-                              <label for="nVersion">nVersion</label>
-                              <input type="text" class="form-control nVersion">
+                        <div class="col-md-12 preimageWrapper">
+                            <div class="preimageJSON">
+                                <button type="button" class="btn btn-link p-0 preimageToggle" data-bs-toggle="collapse" data-bs-target="#preimageContent-">
+                                    <h4>Preimage #<span class="preimageIndex"></span></h4>
+                                </button>
+                                <div class="collapse preimageContent" id="preimageContent-">
+                                    <form class="preimageForm">
+                                        <label for="nVersion">nVersion</label>
+                                        <input type="text" class="form-control nVersion">
+                                        <div class="form-group">
+                                            <label for="Prevouts">Prevouts</label>
+                                            <input type="text" class="form-control Prevouts">
+                                        </div>
+                                        <button class="hashButton hashPrevoutsButton btn btn-primary mb-3" type="button">Hash Data</button>
+                                        <div class="form-group">
+                                            <label for="hashPrevouts">hashPrevouts</label>
+                                            <input type="text" class="form-control hashPrevouts">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="Sequence">Sequence</label>
+                                            <input type="text" class="form-control Sequence">
+                                        </div>
+                                        <button class="hashButton hashSequenceButton btn btn-primary mb-3" type="button">Hash Data</button>
+                                        <div class="form-group">
+                                            <label for="hashSequence">hashSequence</label>
+                                            <input type="text" class="form-control hashSequence">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="outpoint">outpoint</label>
+                                            <input type="text" class="form-control outpoint">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="scriptCode">scriptCode</label>
+                                            <input type="text" class="form-control scriptCode">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="value">value</label>
+                                            <input type="text" class="form-control value">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="nSequence">nSequence</label>
+                                            <input type="text" class="form-control nSequence">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="hashOutputs">hashOutputs</label>
+                                            <input type="text" class="form-control hashOutputs">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="nLockTime">nLockTime</label>
+                                            <input type="text" class="form-control nLockTime">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="nHashType">nHashType</label>
+                                            <input type="text" class="form-control nHashType">
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="form-group">
-                              <label for="Prevouts">Prevouts</label>
-                              <input type="text" class="form-control Prevouts">
-                            </div>
-                            <button class="hashButton btn btn-primary mb-3" type="button">Hash Data</button>
-                            <div class="form-group">
-                              <label for="hashPrevouts">hashPrevouts</label>
-                              <input type="text" class="form-control hashPrevouts">
-                            </div>
-                            <div class="form-group">
-                              <label for="Sequence">Sequence</label>
-                              <input type="text" class="form-control Sequence">
-                            </div>
-                            <button class="hashButton btn btn-primary mb-3" type="button">Hash Data</button>
-                            <div class="form-group">
-                              <label for="hashSequence">hashSequence</label>
-                              <input type="text" class="form-control hashSequence">
-                            </div>
-                            <div class="form-group">
-                              <label for="outpoint">outpoint</label>
-                              <input type="text" class="form-control outpoint">
-                            </div>
-                            <div class="form-group">
-                              <label for="scriptCode">scriptCode</label>
-                              <input type="text" class="form-control scriptCode">
-                            </div>
-                            <div class="form-group">
-                              <label for="value">value</label>
-                              <input type="text" class="form-control value">
-                            </div>
-                            <div class="form-group">
-                              <label for="nSequence">nSequence</label>
-                              <input type="text" class="form-control nSequence">
-                            </div>
-                            <div class="form-group">
-                              <label for="hashOutputs">hashOutputs</label>
-                              <input type="text" class="form-control hashOutputs">
-                            </div>
-                            <div class="form-group">
-                              <label for="nLockTime">nLockTime</label>
-                              <input type="text" class="form-control nLockTime">
-                            </div>
-                            <div class="form-group">
-                              <label for="nHashType">nHashType</label>
-                              <input type="text" class="form-control nHashType">
-                            </div>
-                          </form>
                         </div>
-                      </template>
+                    </template>
+                    
                       
                   <div>
                     <h2>Sighash</h2>
@@ -221,7 +233,7 @@
                     <div id="sighashContainer" class="mt-4"></div>
                   </div>
                   
-                </div>
+            </div>
                 <div>
                     <h2>Signature</h2>
                     <button id="signSigHash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SigHash</button>
@@ -262,8 +274,8 @@
                     <p>When we press the button, we will broadcast the transaction to the RegTest Node through an RPC command. </p>
                 </div>
        
-</form>
-</div>
+    </form>
+
             
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
