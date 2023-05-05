@@ -32,29 +32,12 @@
             <label for="keyPairSelector" class="form-label">Select key pair index:</label>
                 <select class="form-select" id="keyPairSelector" name="keyPairSelector">
                 </select>
-                
                 <button id="mineBlocks" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Mine Blocks</button>
                 <div id="spendableTransactionOutputs" class="mt-4">
                     <h2 style="text-align: center;">Spendable Transaction Outputs</h2>
-                    <table id="stoTable" class="table table-striped">
-                        <thead>
-                            <tr>
-                              <th>Index</th>
-                              <th>Block Height</th>
-                              <th>Block Hash</th>
-                              <th>VOUT</th>
-                              <th>TXID</th>
-                              <th>Value</th>
-                              <th>lockScript ASM</th>
-                              <th>lockScript Hex</th>
-                              <th>Req Sigs</th>
-                              <th>Confs</th>
-                              <th>Private Key</th>
-                            </tr>
-                          </thead>
-                        <tbody></tbody>
-                    </table>
+                <div id="stoContainer"></div>
                 </div>
+                
                 </div>
         
 
@@ -157,16 +140,80 @@
                     <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
                 </div>
 
-                </div>
+                <button id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
+               
+            </div>
                 </div>
                 <div>
-                    <h2>PreImage</h2>
-                    <button id="displayPreImagesButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Display Preimages</button>
-                    <p>Now when we press the button, all the values of the transaction's data fields will be concatenated together in order to provide us the serialised data that will be hashed to create the SigHash.</p>
-                    <div id="preImageContainer" class="mt-4">
-                      <!-- Preimages will be dynamically added here -->
+                    <!-- Preimage Container -->
+                    <div class="container mt-5">
+                        <h2>Preimages</h2>
+                        <p>Click the button below to generate SIGHASH preimages for the transaction.</p>
+                        <button id="displayPreImagesButton" class="btn btn-primary mb-3">Generate Preimages</button>
+                        <div id="preimagesContainer" class="row">
+                        <!-- Dynamic Preimage JSON containers will be appended here -->
+                        </div>
                     </div>
-                  </div>  
+                    
+                    <!-- Preimage JSON Container Template -->
+                    <template id="preimageJSONTemplate">
+                        <div class="col-md-4 preimageJSON">
+                          <h4>Preimage #<span class="preimageIndex"></span></h4>
+                          <form class="preimageForm">
+                            <div class="form-group">
+                              <label for="nVersion">nVersion</label>
+                              <input type="text" class="form-control nVersion">
+                            </div>
+                            <div class="form-group">
+                              <label for="Prevouts">Prevouts</label>
+                              <input type="text" class="form-control Prevouts">
+                            </div>
+                            <button class="hashButton btn btn-primary mb-3" type="button">Hash Data</button>
+                            <div class="form-group">
+                              <label for="hashPrevouts">hashPrevouts</label>
+                              <input type="text" class="form-control hashPrevouts">
+                            </div>
+                            <div class="form-group">
+                              <label for="Sequence">Sequence</label>
+                              <input type="text" class="form-control Sequence">
+                            </div>
+                            <button class="hashButton btn btn-primary mb-3" type="button">Hash Data</button>
+                            <div class="form-group">
+                              <label for="hashSequence">hashSequence</label>
+                              <input type="text" class="form-control hashSequence">
+                            </div>
+                            <div class="form-group">
+                              <label for="outpoint">outpoint</label>
+                              <input type="text" class="form-control outpoint">
+                            </div>
+                            <div class="form-group">
+                              <label for="scriptCode">scriptCode</label>
+                              <input type="text" class="form-control scriptCode">
+                            </div>
+                            <div class="form-group">
+                              <label for="value">value</label>
+                              <input type="text" class="form-control value">
+                            </div>
+                            <div class="form-group">
+                              <label for="nSequence">nSequence</label>
+                              <input type="text" class="form-control nSequence">
+                            </div>
+                            <div class="form-group">
+                              <label for="hashOutputs">hashOutputs</label>
+                              <input type="text" class="form-control hashOutputs">
+                            </div>
+                            <div class="form-group">
+                              <label for="nLockTime">nLockTime</label>
+                              <input type="text" class="form-control nLockTime">
+                            </div>
+                            <div class="form-group">
+                              <label for="nHashType">nHashType</label>
+                              <input type="text" class="form-control nHashType">
+                            </div>
+                          </form>
+                        </div>
+                      </template>
+                      
                   <div>
                     <h2>Sighash</h2>
                     <button id="createSighashButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Create Sighash</button>

@@ -138,3 +138,33 @@ label {
   font-weight: bold;
   font-size: 120%;
 }
+
+#stoContainer {
+  position: relative;
+  white-space: nowrap;
+}
+
+.sto-json {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.pagination-nav {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.pagination-nav a {
+  color: #007bff;
+  text-decoration: none;
+  padding: 8px 16px;
+}
+
+.pagination-nav a:hover {
+  background-color: #eee;
+}

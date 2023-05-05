@@ -1,13 +1,47 @@
-document.addEventListener("DOMContentLoaded", function() {
+/* document.addEventListener("DOMContentLoaded", function () {
   const displayPreImagesButton = document.getElementById("displayPreImagesButton");
   if (displayPreImagesButton) {
-    displayPreImagesButton.addEventListener("click", function() {
+    displayPreImagesButton.addEventListener("click", async function () {
       const transaction = createTransactionFromForm();
-      const preimages = createSighashPreimages(transaction);
+      const stoData = [
+        // Your STO JSON data
+      ];
+      const transactionForm = document.querySelector("#transactionForm");
+      const preimages = await createSighashPreImages(transaction, stoData);
       displayPreImages(preimages);
     });
   }
+}); */
+
+document.querySelectorAll('.hashButton').forEach((button) => {
+  button.addEventListener('click', async (event) => {
+    const formData = 'your-form-data'; // Replace this with the serialized form data
+
+    const hash = await callBackendHashing(formData);
+    // Display the hash in the form
+    // You'll need to add an input element for each Preimage JSON container to display the hash
+    event.target.parentElement.querySelector('.hashResult').value = hash;
+  });
 });
+
+/* document.getElementById("processTransactionDataButton").addEventListener("click", () => {
+  // Create transaction object from form data
+  const transaction = createTransactionFromForm();
+
+  // Get the input count from the transaction object
+  const inputCount = transaction.inputs.length;
+
+  // Call the displayPreImages function with the input count
+  displayPreImages(inputCount);
+}); */
+
+document.getElementById("processTransactionDataButton").addEventListener("click", () => {
+  const inputCount = parseInt(document.querySelector("#inputCount").value); // Get input count from the form
+  displayPreImages(inputCount);
+});
+
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
@@ -17,11 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('createSighashButton').addEventListener('click', async () => {
     const transaction = createTransactionFromForm();
-    const preimages = createSighashPreimages(transaction);
+    const preimages = createSighashPreImages(transaction);
     const sighashes = [];
   
     for (const preimage of preimages) {
-      const hash = await doubleSha256(preimage);
+      const hash = await callBackendHashing(preimage);
       sighashes.push(hash);
     }
   
@@ -126,10 +160,11 @@ async function mineBlocks() {
 
     const minedData = await response.json();
     console.log('Mined data:', minedData);
-    populateSpendableTransactionOutputs(minedData.transactions);
-  } catch (error) {
+    displaySpendableTransactionOutputs(minedData.transactions);
+  } catch (error) { // Add this catch block
     console.error('Error:', error);
   }
+
 }
 
 // Add this helper function to fetch transaction details from the Woc explorer API
@@ -144,24 +179,44 @@ async function fetchTransactionDetails(txHash) {
   return txDetails;
 }
 
-function createSpendableTransactionOutput(transaction, output, selectedPrivateKey) {
+function createSpendableTransactionOutput(index, txDetails, output, selectedPrivateKey) {
+  const lockScriptSize = output.scriptPubKey.hex.length / 2;
+  const unlockScriptSize = output.scriptPubKey.hex.length / 2;
+
   return {
-    index: transaction.n,
-    blockHeight: transaction.blockheight,
-    blockHash: transaction.blockhash,
+    index: index,
+    blockHeight: txDetails.blockheight,
+    blockHash: txDetails.blockhash,
     vout: output.n,
-    txid: transaction.txid,
+    txid: txDetails.txid,
     value: output.value,
+    lockScriptSize: lockScriptSize,
     lockScriptAsm: output.scriptPubKey.asm,
     lockScriptHex: output.scriptPubKey.hex,
     reqSigs: output.scriptPubKey.reqSigs,
-    confirmations: transaction.confirmations,
+    confirmations: txDetails.confirmations,
     privateKey: selectedPrivateKey,
+    unlockScriptSize: unlockScriptSize,
+    unlockScript: output.scriptPubKey.hex,
+    sequence: 0xffffffff,
+    sighashFlag: '01',
   };
 }
 
-async function populateSpendableTransactionOutputs(transactions) {
-  const stoTableBody = document.querySelector("#stoTable > tbody");
+
+async function fetchSTODetails(sto) {
+  return {
+    txid: sto.txid,
+    vout: sto.vout,
+    value: sto.value,
+    unlockScript: sto.unlockScript,
+    sequence: sto.sequence,
+    sighashFlag: sto.sighashFlag,
+  };
+}
+
+async function displaySpendableTransactionOutputs(transactions) {
+  const stoContainer = document.querySelector("#stoContainer");
   const keyPairSelector = document.querySelector("#keyPairSelector");
   const selectedIndex = keyPairSelector.value;
 
@@ -170,27 +225,61 @@ async function populateSpendableTransactionOutputs(transactions) {
   const privateKeyCell = selectedRow.children[2];
   const selectedPrivateKey = privateKeyCell.innerText;
 
-  stoTableBody.innerHTML = ""; // clear the table before populating new data
+  stoContainer.innerHTML = ""; // clear the container before populating new data
 
-  const transactionPromises = transactions.map(async (transaction) => {
+  const spendableTransactionOutputs = [];
+
+  const transactionPromises = transactions.map(async (transaction, index) => {
     const txDetails = await fetchTransactionDetails(transaction.txid);
     const output = txDetails.vout[0];
-    const sto = createSpendableTransactionOutput(transaction, output, selectedPrivateKey);
-
-    const newRow = document.createElement("tr");
-
-    Object.keys(sto).forEach((key, index) => {
-      let cell = newRow.insertCell();
-      cell.innerText = sto[key];
-    });
-
-    stoTableBody.appendChild(newRow);
+    const sto = createSpendableTransactionOutput(index + 1, txDetails, output, selectedPrivateKey);
+    spendableTransactionOutputs.push(sto);
   });
 
   await Promise.all(transactionPromises);
+
+  // Sort spendable transaction outputs by block height
+  spendableTransactionOutputs.sort((a, b) => a.blockHeight - b.blockHeight);
+
+  // Display spendable transaction outputs
+  spendableTransactionOutputs.forEach((spendableTransactionOutput, index) => {
+    const stoElement = document.createElement("pre");
+    stoElement.id = `sto-json-${index + 1}`;
+    stoElement.className = "sto-json";
+    stoElement.style.display = index === 0 ? "block" : "none";
+    stoElement.innerText = JSON.stringify(spendableTransactionOutput, null, 2);
+    stoContainer.appendChild(stoElement);
+  });
+
+  // Create pagination navigation
+  const paginationNav = document.createElement("div");
+  paginationNav.className = "pagination-nav";
+
+  spendableTransactionOutputs.forEach((_, index) => {
+    const navLink = document.createElement("a");
+    navLink.href = "#";
+    navLink.innerText = index + 1;
+    navLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      showStoElement(index);
+    });
+
+    paginationNav.appendChild(navLink);
+  });
+
+  stoContainer.appendChild(paginationNav);
+
+  // Return the spendable transaction outputs
+  return spendableTransactionOutputs;
 }
 
+function showStoElement(index) {
+  const stoElements = document.querySelectorAll(".sto-json");
 
+  stoElements.forEach((element, i) => {
+    element.style.display = i === index ? "block" : "none";
+  });
+}
 
 
 function getTransactionVersionValue() {
@@ -233,7 +322,13 @@ function createTransactionFromForm() {
         sighashFlag: getElementValueById('sighashFlag', i)
       });
     }
-  }
+     // Add inputs to the transaction object
+  transaction.inputs = inputs;
+
+  // Return the transaction object
+  return transaction;
+}
+  
 
   const outputCount = parseInt(document.querySelector('#outputCount').value);
   const outputs = [];
@@ -249,151 +344,129 @@ function createTransactionFromForm() {
   }
 
   return { ...transaction, inputs, outputs, nLockTime: transactionLockTime };
+
+  
+}
+
+const stoData = [
+  // Your STO JSON data
+  
+];
+
+/* const preImages = await createSighashPreImages(transactionForm, stoData);
+ */
+const SIGHASH_ALL = 0x01;
+const SIGHASH_NONE = 0x02;
+const SIGHASH_SINGLE = 0x03;
+const SIGHASH_FORKID = 0x40;
+const SIGHASH_ANYONECANPAY = 0x80;
+
+const SIGHASH_ALL_ANYONECANPAY = SIGHASH_ALL | SIGHASH_ANYONECANPAY;
+const SIGHASH_NONE_ANYONECANPAY = SIGHASH_NONE | SIGHASH_ANYONECANPAY;
+const SIGHASH_SINGLE_ANYONECANPAY = SIGHASH_SINGLE | SIGHASH_ANYONECANPAY;
+
+
+async function callBackendHashing(data) {
+  const response = await fetch('http://203.18.30.236:8090/api/double-sha256', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ data }),
+  });
+
+  const result = await response.json();
+  return result.hash;
 }
 
 
-/* function createSighashPreimages(transaction) {
-  if (Array.isArray(transaction.inputs)) {
-    const preimages = transaction.inputs.map((input, index) => {
-      const preimageParts = [
-        transaction.version,
-        toVarInt(transaction.inputs.length),
-        ...transaction.inputs.map(({ txid, vout, unlockScript, sequence }) => txid + vout + toVarInt(unlockScript.length / 2) + unlockScript + sequence),
-        toVarInt(transaction.outputs.length),
-        ...transaction.outputs.map(({ value, lockScript }) => value + toVarInt(lockScript.length / 2) + lockScript),
-        transaction.nLockTime,
-        intToHexString(input.sighashFlag, 1),
-      ];
-      return preimageParts.join('');
-    });
-    console.log('preimages:', preimages);
-    return preimages;
-  } else {
-    return [];
+async function hashPrevouts(inputs) {
+  let buffer = "";
+  for (const input of inputs) {
+    buffer += input.txid + input.vout;
   }
+  return await callBackendHashing(buffer);
+}
+
+async function hashSequence(inputs) {
+  let buffer = "";
+  for (const input of inputs) {
+    buffer += input.sequence;
+  }
+  return await callBackendHashing(buffer);
+}
+
+async function hashOutputs(outputs) {
+  let buffer = "";
+  for (const output of outputs) {
+    buffer += output.value + output.lockScriptSize + output.lockScript;
+  }
+  return await callBackendHashing(buffer);
+}
+
+async function hashSingleOutput(output) {
+  const buffer = output.value + output.lockScriptSize + output.lockScript;
+  return await callBackendHashing(buffer);
+}
+
+
+
+/* async function createSighashPreImages(transaction, stoData) {
+  const preimages = [];
+  for (let i = 0; i < transaction.inputs.length; i++) {
+    const input = transaction.inputs[i];
+    const sighashFlag = parseInt(input.sighashFlag);
+
+    // Create a preimage object based on the SIGHASH flag and input data
+    const preimage = {
+      nVersion: transaction.version,
+      hashPrevouts: (sighashFlag & 0x80) ? '0000000000000000000000000000000000000000000000000000000000000000' : await hashPrevouts(transaction.inputs),
+      hashSequence: (sighashFlag & 0x80 || (sighashFlag & 0x1f) === 0x02 || (sighashFlag & 0x1f) === 0x03) ? '0000000000000000000000000000000000000000000000000000000000000000' : await hashSequence(transaction.inputs),
+      outpoint: input.txid + input.vout,
+      scriptCode: input.unlockScriptSize + input.unlockScript,
+      value: input.value,
+      nSequence: input.sequence,
+      hashOutputs: (sighashFlag & 0x1f) === 0x01 ? await hashOutputs(transaction.outputs) : (sighashFlag & 0x1f) === 0x03 ? await hashSingleOutput(transaction.outputs[i]) : '0000000000000000000000000000000000000000000000000000000000000000',
+      nLockTime: transaction.nLockTime,
+      nHashType: input.sighashFlag
+    };
+    preimages.push(preimage);
+  }
+  return preimages;
 } */
 
-function createSighashPreimages(transaction) {
-  if (Array.isArray(transaction.inputs)) {
-    const preimages = transaction.inputs.map((input, index) => {
-      const preimageParts = [
-        transaction.version,
-        toVarInt(transaction.inputs.length),
-        ...transaction.inputs.map(({ txid, vout, unlockScriptSize, unlockScript, sequence }) => txid + vout + unlockScriptSize + unlockScript + sequence),
-        toVarInt(transaction.outputs.length),
-        ...transaction.outputs.map(({ value, lockScriptSize, lockScript }) => value + lockScriptSize + lockScript),
-        transaction.nLockTime,
-        input.sighashFlag.padStart(2, '0'),
-      ];
-      const serializedPreimage = preimageParts.join('');
+function displayPreImages(inputCount) {
+  const preimagesContainer = document.getElementById("preimagesContainer");
 
-      const transactionJSON = {
-        version: transaction.version,
-        nLockTime: transaction.nLockTime,
-        sighashFlag: input.sighashFlag,
-      };
+  // Remove existing preimage JSON containers
+  preimagesContainer.querySelectorAll(".preimageJSON").forEach((container) => {
+    preimagesContainer.removeChild(container);
+  });
 
-      // Determine which parts of the transaction to include in JSON object based on the SIGHASH flag
-      const sighashFlagNoForkId = parseInt(input.sighashFlag, 16) & ~0x40;
-      const anyoneCanPay = (sighashFlagNoForkId & 0x80) !== 0;
+  // Create new preimage JSON containers
+  const preimageJSONTemplate = document.getElementById("preimageJSONTemplate");
+  for (let i = 0; i < inputCount; i++) {
+    const newContainer = preimageJSONTemplate.content.cloneNode(true);
+    newContainer.querySelector(".preimageIndex").textContent = i + 1;
 
-      if (!anyoneCanPay) {
-        transactionJSON.inputCount = transaction.inputs.length;
-        transactionJSON.inputs = transaction.inputs.map(({ txid, vout, unlockScriptSize, unlockScript, sequence }) => ({ txid, vout, unlockScriptSize, unlockScript, sequence }));
-      } else {
-        transactionJSON.inputs = [{ ...transaction.inputs[index] }];
-      }
-
-      switch (input.sighashFlag) {
-        case SIGHASH_ALL:
-        case SIGHASH_ALL_ANYONECANPAY:
-          transactionJSON.outputCount = transaction.outputs.length;
-          transactionJSON.outputs = transaction.outputs.map(({ value, lockScriptSize, lockScript }) => ({ value, lockScriptSize, lockScript }));
-          break;
-        case SIGHASH_NONE:
-        case SIGHASH_NONE_ANYONECANPAY:
-          break;
-        case SIGHASH_SINGLE:
-        case SIGHASH_SINGLE_ANYONECANPAY:
-          if (index <= transaction.outputs.length - 1) {
-            transactionJSON.outputs = [{ ...transaction.outputs[index] }];
-          } else {
-            throw new Error(`SIGHASH_SINGLE cannot be used when input number is greater than output number.`);
-          }
-          break;
-        default:
-          throw new Error(`Unsupported SIGHASH flag: ${input.sighashFlag}`);
-      }
-      
-      return { serializedPreimage, transactionJSON };
+    // Set unique IDs for each form field
+    const formFields = newContainer.querySelectorAll(".form-control");
+    formFields.forEach((field) => {
+      field.id = field.classList.item(1) + "-" + i;
     });
 
-    console.log('preimages:', preimages);
-    return preimages;
-  } else {
-    return [];
+    // Set unique ID for each hash button
+    const hashButtons = newContainer.querySelectorAll(".hashButton");
+    hashButtons.forEach((button, index) => {
+      button.id = "hashButton-" + index + "-" + i;
+    });
+
+    preimagesContainer.appendChild(newContainer);
   }
 }
 
 
 
-
-
-
-
-
-
-
-/* function displayPreImages(preimages) {
-  const preImageContainer = document.getElementById("preImageContainer");
-  preImageContainer.innerHTML = ""; // Clear previous content
-
-  preimages.forEach((preImage, index) => {
-    const preImageDiv = document.createElement("div");
-    preImageDiv.classList.add("mb-3");
-
-    const preImageLabel = document.createElement("label");
-    preImageLabel.textContent = `Input ${index + 1} PreImage:`;
-    preImageDiv.appendChild(preImageLabel);
-
-    const preImagePre = document.createElement("pre");
-    preImagePre.classList.add("border", "p-2");
-    preImagePre.textContent = preImage; // Display the raw serialized sighash preimage
-    preImageDiv.appendChild(preImagePre);
-
-    preImageContainer.appendChild(preImageDiv);
-  });
-} */
-
-function displayPreImages(preimages) {
-  const preImageContainer = document.getElementById("preImageContainer");
-  preImageContainer.innerHTML = ""; // Clear previous content
-
-  preimages.forEach(({ serializedPreimage, transactionJSON }, index) => {
-    const preImageDiv = document.createElement("div");
-    preImageDiv.classList.add("mb-3");
-
-    const preImageLabel = document.createElement("label");
-    preImageLabel.textContent = `Input ${index + 1} PreImage:`;
-    preImageDiv.appendChild(preImageLabel);
-
-    const preImagePre = document.createElement("pre");
-    preImagePre.classList.add("border", "p-2");
-    preImagePre.textContent = serializedPreimage; // Display the raw serialized sighash preimage
-    preImageDiv.appendChild(preImagePre);
-
-    const preImageJSONLabel = document.createElement("label");
-    preImageJSONLabel.textContent = `Input ${index + 1} PreImage JSON:`;
-    preImageDiv.appendChild(preImageJSONLabel);
-
-    const preImageJSONPre = document.createElement("pre");
-    preImageJSONPre.classList.add("border", "p-2");
-    preImageJSONPre.textContent = JSON.stringify(transactionJSON, null, 2); // Display the JSON object of the constituent parts
-    preImageDiv.appendChild(preImageJSONPre);
-
-    preImageContainer.appendChild(preImageDiv);
-  });
-}
 
 
 
@@ -498,7 +571,7 @@ function updateInputOrOutputContainers(containerType, event) {
 
 
 
-const SIGHASH_ALL = '41';
+/* const SIGHASH_ALL = '41';
 const SIGHASH_NONE = '42';
 const SIGHASH_SINGLE = '43';
 const ANYONECANPAY = '80';
@@ -507,14 +580,14 @@ const SIGHASH_ALL_ANYONECANPAY = SIGHASH_ALL | ANYONECANPAY;
 const SIGHASH_NONE_ANYONECANPAY = SIGHASH_NONE | ANYONECANPAY;
 const SIGHASH_SINGLE_ANYONECANPAY = SIGHASH_SINGLE | ANYONECANPAY;
 
-async function doubleSha256(hexString) {
+async function callBackendHashing(hexString) {
   const buffer = new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
   const firstHash = new Uint8Array(await crypto.subtle.digest('SHA-256', buffer));
   const secondHash = new Uint8Array(await crypto.subtle.digest('SHA-256', firstHash));
   return Array.from(secondHash).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+} */
 
-function displaySighashes(sighashes) {
+/* function displaySighashes(sighashes) {
   const sighashContainer = document.getElementById("sighashContainer");
   sighashContainer.innerHTML = ""; // Clear previous content
 
@@ -533,4 +606,4 @@ function displaySighashes(sighashes) {
 
     sighashContainer.appendChild(sighashDiv);
   });
-}
+} */

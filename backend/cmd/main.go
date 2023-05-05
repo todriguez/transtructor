@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -37,14 +38,15 @@ type RPCError struct {
 }
 
 type Transaction struct {
+	Index         int     `json:"index"`
 	TxID          string  `json:"txid"`
 	Blockhash     string  `json:"blockhash"`
 	Blockheight   int64   `json:"blockheight"`
 	N             int     `json:"n"`
 	Value         float64 `json:"value"`
 	Asm           string  `json:"asm"`
-	ScriptHex     string  `json:"scriptHex"` // Rename this field
-	ReqSigs       int     `json:"reqSigs"`
+	ScriptHex     string  `json:"scripthex"`
+	ReqSigs       int     `json:"reqsigs"`
 	Confirmations int     `json:"confirmations"`
 }
 
@@ -175,18 +177,6 @@ func generateKeyPairHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resultJSON)
 }
 
-/* func privateKeyWIFToPublicKey(privateKeyWIF string) (string, error) {
-	wif, err := btcutil.DecodeWIF(privateKeyWIF)
-	if err != nil {
-		return "", err
-	}
-
-	publicKey := wif.PrivKey.PubKey()
-	publicKeyBytes := publicKey.SerializeCompressed()
-
-	return hex.EncodeToString(publicKeyBytes), nil
-} */
-
 func privateKeyToPublicKey(privateKeyWIF string) (string, error) {
 	wif, err := btcutil.DecodeWIF(privateKeyWIF)
 	if err != nil {
@@ -260,13 +250,13 @@ func mineBlocksHandler(w http.ResponseWriter, r *http.Request) {
 	// Mine 110 blocks to the specified address
 	var transactions []btcjson.TxRawResult
 	for i := 0; i < 110; i++ {
-		blockHashes, err := client.GenerateToAddress(1, btcAddress, nil)
+		blockhashes, err := client.GenerateToAddress(1, btcAddress, nil)
 		if err != nil {
 			http.Error(w, "Failed to mine block", http.StatusInternalServerError)
 			return
 		}
 
-		hash := blockHashes[0]
+		hash := blockhashes[0]
 
 		block, err := client.GetBlockVerboseTx(hash)
 		if err != nil {
@@ -291,14 +281,14 @@ func mineBlocksHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("client: %+v", client) // Move this inside the loop
 
 			if rawTx.BlockHash != "" {
-				blockHash, err := chainhash.NewHashFromStr(rawTx.BlockHash)
+				blockhash, err := chainhash.NewHashFromStr(rawTx.BlockHash)
 				if err != nil {
 					log.Printf("Error converting block hash: %v", err)
 					continue
 				}
-				_, err = client.GetBlock(blockHash)
+				_, err = client.GetBlock(blockhash)
 			} else {
-				log.Printf("rawTx.BlockHash is empty")
+				log.Printf("rawTx.Blockhash is empty")
 			}
 
 			txRaw := btcjson.TxRawResult{
@@ -326,16 +316,6 @@ func mineBlocksHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to filter transactions", http.StatusInternalServerError)
 		return
 	}
-
-	// Decode each valid transaction
-	/* 	for _, tx := range validTransactions {
-		decodedTx, err := decodeTransaction(tx.TxID)
-		if err != nil {
-			log.Printf("Error decoding transaction: %v", err)
-			// Handle the error or continue to the next transaction
-			continue
-		}
-	} */
 
 	// Return a successful response with the filtered transactions
 	w.Header().Set("Content-Type", "application/json")
@@ -391,20 +371,6 @@ func proxyTransactionDetails(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(jsonResponse)
 }
-
-/* func decodeTransaction(transactionHex string) (*btcutil.Tx, error) {
-	serializedTx, err := hex.DecodeString(transactionHex)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err := btcutil.NewTxFromBytes(serializedTx)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, nila
-} */
 
 func handleTransactionDetails(w http.ResponseWriter, r *http.Request) {
 	// Enable CORS for the client-side application
@@ -471,12 +437,12 @@ func filterValidTransactions(transactions []btcjson.TxRawResult, client *rpcclie
 			return nil, err
 		}
 
-		blockHash, err := chainhash.NewHashFromStr(detailedTx.BlockHash)
+		blockhash, err := chainhash.NewHashFromStr(detailedTx.BlockHash)
 		if err != nil {
 			return nil, err
 		}
 
-		block, err := client.GetBlockVerbose(blockHash)
+		block, err := client.GetBlockVerbose(blockhash)
 		if err != nil {
 			return nil, err
 		}
@@ -484,6 +450,7 @@ func filterValidTransactions(transactions []btcjson.TxRawResult, client *rpcclie
 		if len(detailedTx.Details) > 0 {
 			vout := tx.Vout[0] // Use the first vout for the miner reward
 			txList = append(txList, Transaction{
+				Index:         len(validTransactions),
 				TxID:          tx.Txid,
 				Blockhash:     tx.BlockHash,
 				Blockheight:   block.Height,
@@ -512,6 +479,40 @@ func filterValidTransactions(transactions []btcjson.TxRawResult, client *rpcclie
 	return validTransactions, nil
 }
 
+func doubleSha256(data string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(data))
+	firstHash := hasher.Sum(nil)
+
+	hasher.Reset()
+	hasher.Write(firstHash)
+	secondHash := hasher.Sum(nil)
+
+	return hex.EncodeToString(secondHash)
+}
+
+func doubleSha256Handler(w http.ResponseWriter, r *http.Request) {
+	var requestData struct {
+		Data string `json:"data"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	doubleHash := doubleSha256(requestData.Data)
+
+	response := struct {
+		Hash string `json:"hash"`
+	}{
+		Hash: doubleHash,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
 	// Set up CORS
 	c := cors.New(cors.Options{
@@ -526,6 +527,7 @@ func main() {
 	http.Handle("/api/mine-blocks", c.Handler(http.HandlerFunc(mineBlocksHandler)))
 	http.Handle("/api/transaction-details", c.Handler(http.HandlerFunc(handleTransactionDetails)))
 	http.Handle("/api/proxy-transaction-details", c.Handler(http.HandlerFunc(proxyTransactionDetails)))
+	http.Handle("/api/double-sha256", c.Handler(http.HandlerFunc(doubleSha256Handler)))
 
 	port := "8090"
 	log.Println("Server running on port", port)
