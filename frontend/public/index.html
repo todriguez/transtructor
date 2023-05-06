@@ -147,21 +147,37 @@
             </div>
             <button type="button" id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
         </div>
-                </div>
-                <div>
-                    <!-- Preimage Container -->
-                    <div class="container mt-5">
-                        <h2>Preimages</h2>
-
-                        <div id="transactionJSONContainer" class="mt-4"></div>
-
-                        <p>Click the button below to generate SIGHASH preimages for the transaction.</p>
-                        <button id="displayPreImagesButton" class="btn btn-primary mb-3">Generate Preimages</button>
-                        <div id="preimagesContainer" class="row">
-                        <!-- Dynamic Preimage JSON containers will be appended here -->
-                        </div>
-                    </div>
-                    
+        <div>
+            <!-- Preimage Container -->
+            <div class="container mt-5">
+              <h2>Preimages</h2>
+          
+              <div id="transactionJSONContainer" class="mt-4"></div>
+          
+              <p>Fill in the fields below with the appropriate values extracted from the JSON displayed above, then click the button at the bottom to generate SIGHASH preimages for the transaction. </p>
+                
+              <ul class="list-group mb-4" id="sighashMenu">
+                <li class="list-group-item">SIGHASH_ALL</li>
+                <li class="list-group-item">SIGHASH_NONE</li>
+                <li class="list-group-item">SIGHASH_SINGLE</li>
+                <li class="list-group-item">SIGHASH_ALL | SIGHASH_ANYONECANPAY</li>
+                <li class="list-group-item">SIGHASH_NONE | SIGHASH_ANYONECANPAY</li>
+                <li class="list-group-item">SIGHASH_SINGLE | SIGHASH_ANYONECANPAY</li>
+              </ul>
+              <p><ul>
+                <li>outpoint: The txid part of the outpoint needs to be in little-endian format. In the Spendable Transaction Output JSON, the txid is in big-endian format. You will need to reverse the byte order of the txid before using it in the outpoint field. The vout part of the outpoint is already in little-endian format, so you don't need to change its endianness.</li>
+                <li>nSequence: The nSequence value in the Spendable Transaction Output JSON is in big-endian format. You will need to convert it to little-endian format before using it in the nSequence field </li>
+                <li>value: The value in the Spendable Transaction Output JSON is in decimal format. You need to convert it to satoshis (in integer format) and then represent it in little-endian hexadecimal format for the value field of the baseTemplate.</li>
+            </ul></p>
+              
+              <div id="preimagesContainer" class="row">
+                <!-- Dynamic Preimage JSON containers will be appended here -->
+              </div>
+          
+              <button id="displayPreImagesButton" class="btn btn-primary mb-3">Generate Preimages</button>
+            </div>
+          </div>
+          
                     <!-- Preimage JSON Container Template -->
                     <template id="preimageJSONTemplate">
                         <div class="col-md-12 preimageWrapper">
@@ -171,60 +187,72 @@
                                 </button>
                                 <div class="collapse preimageContent" id="preimageContent-">
                                     <form class="preimageForm">
-                                        <label for="nVersion">nVersion</label>
+                                        <label for="nVersion">nVersion (4-byte transaction version number)</label>
                                         <input type="text" class="form-control nVersion">
                                         <div class="form-group">
-                                            <label for="Prevouts">Prevouts</label>
+                                            <label for="Prevouts">Prevouts (transaction input outpoints)</label>
                                             <input type="text" class="form-control Prevouts">
                                         </div>
                                         <button class="hashButton hashPrevoutsButton btn btn-primary mb-3" type="button">Hash Data</button>
                                         <div class="form-group">
-                                            <label for="hashPrevouts">hashPrevouts</label>
+                                            <label for="hashPrevouts">hashPrevouts (32-byte hash of all input outpoints)</label>
                                             <input type="text" class="form-control hashPrevouts">
                                         </div>
                                         <div class="form-group">
-                                            <label for="Sequence">Sequence</label>
+                                            <label for="Sequence">Sequence (transaction input sequence numbers)</label>
                                             <input type="text" class="form-control Sequence">
                                         </div>
                                         <button class="hashButton hashSequenceButton btn btn-primary mb-3" type="button">Hash Data</button>
                                         <div class="form-group">
-                                            <label for="hashSequence">hashSequence</label>
+                                            <label for="hashSequence">hashSequence (32-byte hash of all input sequence numbers)</label>
                                             <input type="text" class="form-control hashSequence">
                                         </div>
                                         <div class="form-group">
-                                            <label for="outpoint">outpoint</label>
+                                            <label for="outpoint">outpoint (36-byte outpoint of the input being signed)</label>
                                             <input type="text" class="form-control outpoint">
                                         </div>
                                         <div class="form-group">
-                                            <label for="scriptCode">scriptCode</label>
+                                            <label for="scriptCode">scriptCode (output script being spent, prefixed by its length)</label>
                                             <input type="text" class="form-control scriptCode">
                                         </div>
                                         <div class="form-group">
-                                            <label for="value">value</label>
+                                            <label for="value">value (8-byte value of the output being spent, in little-endian format)</label>
                                             <input type="text" class="form-control value">
                                         </div>
                                         <div class="form-group">
-                                            <label for="nSequence">nSequence</label>
+                                            <label for="nSequence">nSequence (4-byte sequence number of the input being signed)</label>
                                             <input type="text" class="form-control nSequence">
                                         </div>
                                         <div class="form-group">
-                                            <label for="hashOutputs">hashOutputs</label>
-                                            <input type="text" class="form-control hashOutputs">
+                                            <label for="Outputs">Outputs (transaction output values and lockScripts)</label>
+                                        <input type="text" class="form-control Outputs">
+                                        </div>
+                                        <button class="hashButton hashOutputsButton btn btn-primary mb-3" type="button">Hash Data</button>
+                                        <div class="form-group">
+                                        <label for="hashOutputs">hashOutputs (32-byte hash of output values and lockScripts)</label>
+                                        <input type="text" class="form-control hashOutputs">
                                         </div>
                                         <div class="form-group">
-                                            <label for="nLockTime">nLockTime</label>
-                                            <input type="text" class="form-control nLockTime">
+                                        <label for="nLockTime">nLockTime (4-byte transaction lock time)</label>
+                                        <input type="text" class="form-control nLockTime">
                                         </div>
                                         <div class="form-group">
-                                            <label for="nHashType">nHashType</label>
-                                            <input type="text" class="form-control nHashType">
+                                        <label for="nHashType">nHashType (4-byte SIGHASH type, in little-endian format)</label>
+                                        <input type="text" class="form-control nHashType">
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                    
+                                        <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
+                                        <div class="form-group">
+                                        <label for="preimage">SIGHASH Preimage</label>
+                                        <input type="text" class="form-control preimage" readonly>
+                                        </div>
+                                        </form>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </template>
+                                        </div>
+
+                
                       
                   <div>
                     <h2>Sighash</h2>

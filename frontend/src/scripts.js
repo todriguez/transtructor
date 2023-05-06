@@ -1,63 +1,92 @@
-document.getElementById("processTransactionDataButton").addEventListener("click", () => {
-  const inputCount = parseInt(document.querySelector("#inputCount").value); // Get input count from the form
-  const transaction = createTransactionFromForm(); // Create transaction object from the form data
-  displayTransactionJSON(transaction); // Display the transaction JSON object
-  displayPreImages(inputCount); // Create preimage containers
-});
+function setTooltipAttributes() {
+  const tooltipItems = document.querySelectorAll("#sighashMenu .list-group-item");
+  const templateKeys = [
+    "all",
+    "none",
+    "single",
+    "all-anyonecanpay",
+    "none-anyonecanpay",
+    "single-anyonecanpay",
+  ];
+
+  tooltipItems.forEach((item, index) => {
+    const tooltipJSON = commonKeys.reduce((acc, key) => {
+      const row = sighashTemplates[templateKeys[index]].find((row) => row.key === key);
+      const value = row ? row.value : "-";
+      acc[key] = value === "" ? "32-byte zero hash" : value;
+      return acc;
+    }, {});
+
+    item.setAttribute("data-bs-toggle", "tooltip");
+    item.setAttribute("data-bs-html", "true");
+    item.setAttribute("data-bs-original-title", `<pre>${JSON.stringify(tooltipJSON, null, 2)}</pre>`);
+  });
+}
 
 
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+  // Call the setTooltipAttributes function
+  setTooltipAttributes();
+
+  // Initialize the tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Other event listeners
+  document.getElementById("processTransactionDataButton").addEventListener("click", () => {
+    const inputCount = parseInt(document.querySelector("#inputCount").value);
+    const transaction = createTransactionFromForm();
+    displayTransactionJSON(transaction);
+    displayPreImages(inputCount);
+  });
+
   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
   document.querySelector('#mineBlocks').addEventListener('click', mineBlocks);
-});
 
-document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('createSighashButton').addEventListener('click', async () => {
     const transaction = createTransactionFromForm();
     const preimages = createSighashPreImages(transaction);
     const sighashes = [];
-  
+
     for (const preimage of preimages) {
       const hash = await callBackendHashing(preimage);
       sighashes.push(hash);
     }
-  
+
     displaySighashes(sighashes);
   });
-});
 
-document.getElementById("inputCount").addEventListener("change", (event) => {
-  createInputContainers(event);
-});
+  document.getElementById("inputCount").addEventListener("change", (event) => {
+    createInputContainers(event);
+  });
 
-document.getElementById("outputCount").addEventListener("change", (event) => {
-  createOutputContainers(event);
-});
+  document.getElementById("outputCount").addEventListener("change", (event) => {
+    createOutputContainers(event);
+  });
 
-// Add the following lines to clear the default containers on page load
-window.addEventListener("load", () => {
-  document.getElementById("inputContainers").innerHTML = "";
-  document.getElementById("outputContainers").innerHTML = "";
-});
+  document.getElementById('generatekeypair').addEventListener('click', generateKeyPair);
+  document.getElementById('mineBlocks').addEventListener('click', mineBlocks);
+  document.getElementById('signSigHash').addEventListener('click', signSigHash);
+  document.getElementById('generateRawTx').addEventListener('click', generateRawTx);
+  document.getElementById('generateTXID').addEventListener('click', generateTXID);
+  document.getElementById('broadcastTX').addEventListener('click', broadcastTX);
 
-
-
-// Add event listeners to the buttons
-document.getElementById('generatekeypair').addEventListener('click', generateKeyPair);
-document.getElementById('mineBlocks').addEventListener('click', mineBlocks);
-document.getElementById('signSigHash').addEventListener('click', signSigHash);
-document.getElementById('generateRawTx').addEventListener('click', generateRawTx);
-document.getElementById('generateTXID').addEventListener('click', generateTXID);
-document.getElementById('broadcastTX').addEventListener('click', broadcastTX);
-
-// Update the input/output related functions
-document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('inputCount').addEventListener('input', createInputContainers);
   document.getElementById('outputCount').addEventListener('input', createOutputContainers);
 });
+
+window.addEventListener("load", () => {
+  document.getElementById("inputContainers").innerHTML = "";
+  document.getElementById("outputContainers").innerHTML = "";
+  // Call logTooltipJSON() to log the JSON for each tooltip in the console
+  logTooltipJSON();
+  });
+  
 
 
 
@@ -339,11 +368,11 @@ function getInputs() {
   for (let i = 0; i < inputCount; i++) {
     const prevoutHash = document.getElementById(`inputTXID-${i}`).value;
     const prevoutN = document.getElementById(`inputVOUT-${i}`).value;
-    const unlockScriptSize = unlockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
     const unlockScript = document.getElementById(`inputUnlockScript-${i}`).value;
     const sequence = document.getElementById(`inputSequence-${i}`).value;
     const sighashFlag = document.getElementById(`sighashFlag-${i}`).value;
 
+    const unlockScriptSize = unlockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
 
     inputs.push({ prevoutHash, prevoutN, unlockScript, sequence, sighashFlag, unlockScriptSize });
   }
@@ -357,9 +386,9 @@ function getOutputs() {
 
   for (let i = 0; i < outputCount; i++) {
     const value = document.getElementById(`outputValue-${i}`).value;
-    const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
     const lockScript = document.getElementById(`outputlockScript-${i}`).value;
 
+    const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
 
     outputs.push({ value, lockScript, lockScriptSize });
   }
@@ -703,5 +732,108 @@ async function processTransactionData() {
 // Add the event listener for the "Process Transaction Data" button
 document.getElementById("processTransactionDataButton").addEventListener("click", processTransactionData);
 
+const baseTemplate = [
+  { key: "nVersion", value: "4-byte little-endian" },
+  { key: "hashPrevouts", value: "32-byte SHA256d of all concatenated inputs' TXIDs and vouts, both in little-endian format" },
+  { key: "hashSequence", value: "32-byte SHA256d of all concatenated inputs' nSequence values, little-endian format" },
+  { key: "outpoint", value: "32-byte input txid in little-endian + 4-byte vout in little-endian" },
+  { key: "lockScript", value: "CompactSize varInt for lockScript size + lockScript of the output being spent" },
+  { key: "value", value: "8-byte satoshis, little-endian format" },
+  { key: "nSequence", value: "4-byte little-endian of the input being signed" },
+  { key: "hashOutputs", value: "32-byte SHA256d of all concatenated outputs' values, CompactSize varInt for lockScript size, and lockScripts, values in little-endian format" },
+  { key: "nLockTime", value: "4-byte little-endian" },
+  { key: "nHashType", value: "4-byte little-endian" },
+];
 
+
+
+
+const zeroHashField = { key: "32-byte zero hash", value: "" };
+
+const sighashTemplates = {
+  all: baseTemplate,
+  none: [
+    ...baseTemplate.slice(0, 2),
+    zeroHashField,
+    ...baseTemplate.slice(3, 6),
+    zeroHashField,
+    ...baseTemplate.slice(7),
+  ],
+  single: [
+    ...baseTemplate.slice(0, 2),
+    zeroHashField,
+    ...baseTemplate.slice(3, 6),
+    { key: "hashOutputs", value: "SHA256d of the single output corresponding to the input being signed, value in little-endian format" },
+    ...baseTemplate.slice(7),
+  ],
+  "all-anyonecanpay": [
+    ...baseTemplate.slice(0, 1),
+    zeroHashField,
+    ...baseTemplate.slice(2),
+  ],
+  "none-anyonecanpay": [
+    ...baseTemplate.slice(0, 1),
+    zeroHashField,
+    zeroHashField,
+    ...baseTemplate.slice(3, 6),
+    zeroHashField,
+    ...baseTemplate.slice(7),
+  ],
+  "single-anyonecanpay": [
+    ...baseTemplate.slice(0, 1),
+    zeroHashField,
+    zeroHashField,
+    ...baseTemplate.slice(3, 6),
+    { key: "hashOutputs", value: "SHA256d of the single output corresponding to the input being signed, value in little-endian format" },
+    ...baseTemplate.slice(7),
+  ],
+};
+
+
+const commonKeys = [
+  "nVersion",
+  "hashPrevouts",
+  "hashSequence",
+  "outpoint",
+  "lockScript",
+  "value",
+  "nSequence",
+  "hashOutputs",
+  "nLockTime",
+  "nHashType",
+];
+
+
+function logTooltipJSON() {
+  const templateKeys = [
+    "all",
+    "none",
+    "single",
+    "all-anyonecanpay",
+    "none-anyonecanpay",
+    "single-anyonecanpay",
+  ];
+
+  templateKeys.forEach((templateKey) => {
+    const tooltipJSON = commonKeys.reduce((acc, key) => {
+      const row = sighashTemplates[templateKey].find((row) => row.key === key);
+      const value = row ? row.value : "-";
+      acc[key] = value === "" ? "32-byte zero hash" : value;
+      return acc;
+    }, {});
+
+    console.log(`${templateKey}:\n${JSON.stringify(tooltipJSON, null, 2)}\n`);
+  });
+}
+
+
+
+/* document.querySelectorAll('#sighashMenu a').forEach((menuItem) => {
+  menuItem.addEventListener('click', (event) => {
+    event.preventDefault();
+    const selectedSighash = event.target.dataset.sighash;
+    document.getElementById('sighashTemplateContainer').textContent = sighashTemplates[selectedSighash];
+  });
+}); */
+ 
 
