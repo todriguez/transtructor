@@ -24,9 +24,6 @@ function setTooltipAttributes() {
 }
 
 
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
   // Call the setTooltipAttributes function
   setTooltipAttributes();
@@ -87,9 +84,6 @@ window.addEventListener("load", () => {
   logTooltipJSON();
   });
   
-
-
-
 
 async function generateKeyPair(event) {
   event.preventDefault();
@@ -213,7 +207,6 @@ function createSpendableTransactionOutput(index, txDetails, output, selectedPriv
   };
 }
 
-
 async function fetchSTODetails(sto) {
   return {
     txid: sto.txid,
@@ -291,7 +284,6 @@ function showStoElement(index) {
   });
 }
 
-
 function getTransactionVersionValue() {
   return getElementValueById('version');
 }
@@ -306,54 +298,26 @@ function getElementValueById(id, index) {
   return element ? element.value : null;
 }
 
-
-
-
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 function createTransactionFromForm() {
-  const transactionLockTime = document.querySelector("#nLockTime").value;
+  const transactionLockTime = parseInt(document.querySelector("#nLockTime").value).toString(16).padStart(8, "0");
 
-  const inputCount = parseInt(document.querySelector('#inputCount').value);
-  const inputs = [];
-  for (let i = 0; i < inputCount; i++) {
-    const inputElement = document.getElementById(`inputContainer-${i}`);
-    if (inputElement) {
-      const input = {
-        txid: getElementValueById('inputTXID', i),
-        vout: getElementValueById('inputVOUT', i),
-        sequence: getElementValueById('inputSequence', i),
-        unlockScriptSize: getElementValueById('inputUnlockScriptSize', i),
-        unlockScript: getElementValueById('inputUnlockScript', i),
-        sighashFlag: getElementValueById('sighashFlag', i)
-      };
-      inputs.push(input);
-      console.log('Input:', input);
-    }
-  }
-
-  const outputCount = parseInt(document.querySelector('#outputCount').value);
-  const outputs = [];
-  for (let i = 0; i < outputCount; i++) {
-    const outputElement = document.getElementById(`outputContainer-${i}`);
-    if (outputElement) {
-      const output = {
-        value: getElementValueById('outputValue', i),
-        lockScriptSize: getElementValueById('outputlockScriptSize', i),
-        lockScript: getElementValueById('outputlockScript', i),
-      };
-      outputs.push(output);
-      console.log('Output:', output);
-    }
-  }
+  const inputs = getInputs().map(input => ({
+    ...input,
+    prevoutN: input.prevoutN.toString(16).padStart(8, "0"),
+    sighashFlag: input.sighashFlag.toString(16),
+    sequence: input.sequence.toString(16).padStart(8, "0"),
+  }));
+  const outputs = getOutputs();
 
   const transaction = {
-    version: getTransactionVersionValue(),
-    inputCount: inputCount,
+    version: getTransactionVersionValue().padStart(8, "0"),
+    inputCount: toVarInt(inputs.length),
     inputs: inputs,
-    outputCount: outputCount,
+    outputCount: toVarInt(outputs.length),
     outputs: outputs,
     nLockTime: transactionLockTime,
   };
@@ -361,16 +325,18 @@ function createTransactionFromForm() {
   return transaction;
 }
 
+
+
 function getInputs() {
   const inputCount = parseInt(document.getElementById("inputCount").value, 16);
   const inputs = [];
 
   for (let i = 0; i < inputCount; i++) {
     const prevoutHash = document.getElementById(`inputTXID-${i}`).value;
-    const prevoutN = document.getElementById(`inputVOUT-${i}`).value;
+    const prevoutN = parseInt(document.getElementById(`inputVOUT-${i}`).value, 16);
     const unlockScript = document.getElementById(`inputUnlockScript-${i}`).value;
-    const sequence = document.getElementById(`inputSequence-${i}`).value;
-    const sighashFlag = document.getElementById(`sighashFlag-${i}`).value;
+    const sequence = parseInt(document.getElementById(`inputSequence-${i}`).value, 16);
+    const sighashFlag = parseInt(document.getElementById(`sighashFlag-${i}`).value, 16);
 
     const unlockScriptSize = unlockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
 
@@ -385,7 +351,7 @@ function getOutputs() {
   const outputs = [];
 
   for (let i = 0; i < outputCount; i++) {
-    const value = document.getElementById(`outputValue-${i}`).value;
+    const value = parseInt(document.getElementById(`outputValue-${i}`).value, 16);
     const lockScript = document.getElementById(`outputlockScript-${i}`).value;
 
     const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
@@ -395,27 +361,6 @@ function getOutputs() {
 
   return outputs;
 }
-
-
-
-
-const stoData = [
-  // Your STO JSON data
-  
-];
-
-/* const preImages = await createSighashPreImages(transactionForm, stoData);
- */
-const SIGHASH_ALL = 0x01;
-const SIGHASH_NONE = 0x02;
-const SIGHASH_SINGLE = 0x03;
-const SIGHASH_FORKID = 0x40;
-const SIGHASH_ANYONECANPAY = 0x80;
-
-const SIGHASH_ALL_ANYONECANPAY = SIGHASH_ALL | SIGHASH_ANYONECANPAY;
-const SIGHASH_NONE_ANYONECANPAY = SIGHASH_NONE | SIGHASH_ANYONECANPAY;
-const SIGHASH_SINGLE_ANYONECANPAY = SIGHASH_SINGLE | SIGHASH_ANYONECANPAY;
-
 
 async function callBackendHashing(data) {
   const response = await fetch('http://203.18.30.236:8090/api/double-sha256', {
@@ -429,7 +374,6 @@ async function callBackendHashing(data) {
   const result = await response.json();
   return result.hash;
 }
-
 
 async function hashPrevouts(inputs) {
   let buffer = "";
@@ -505,8 +449,6 @@ function displayPreImages(inputCount) {
     preimagesContainer.appendChild(newPreimageJSON);
   }
 }
-
-
 
 
 async function handleHashButtonClick(event) {
@@ -640,62 +582,6 @@ function displayTransactionJSON(transaction) {
   transactionJSONContainer.appendChild(transactionJSONData);
 }
 
-
-
-
-
-async function displayPreimageJSONGallery(transaction, spendableTransactionOutputs) {
-  const preimagesContainer = document.getElementById("preimagesContainer");
-  preimagesContainer.innerHTML = ""; // clear the container before populating new data
-
-  const preimageJSONs = [];
-
-  // Iterate over the transaction inputs
-  for (let i = 0; i < transaction.inputs.length; i++) {
-    const input = transaction.inputs[i];
-    const spendableTransactionOutput = spendableTransactionOutputs[i];
-
-    // Generate the preimage JSON objects for each SIGHASH flag
-    const preimageJSON = {
-      nVersion: transaction.version,
-      // ... populate the other fields depending on the SIGHASH flag
-    };
-
-    preimageJSONs.push(preimageJSON);
-  }
-
-  // Display preimage JSON objects in a paginated gallery
-  preimageJSONs.forEach((preimageJSON, index) => {
-    const preimageElement = document.createElement("pre");
-    preimageElement.id = `preimage-json-${index + 1}`;
-    preimageElement.className = "preimage-json";
-    preimageElement.style.display = index === 0 ? "block" : "none";
-    preimageElement.innerText = JSON.stringify(preimageJSON, null, 2);
-    preimagesContainer.appendChild(preimageElement);
-  });
-
-  // Create pagination navigation
-  const paginationNav = document.createElement("div");
-  paginationNav.className = "pagination-nav";
-
-  preimageJSONs.forEach((_, index) => {
-    const navLink = document.createElement("a");
-    navLink.href = "#";
-    navLink.innerText = index + 1;
-    navLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      showPreimageElement(index);
-    });
-
-    paginationNav.appendChild(navLink);
-  });
-
-  preimagesContainer.appendChild(paginationNav);
-
-  // Return the preimage JSON objects
-  return preimageJSONs;
-}
-
 function showPreimageElement(index) {
   const preimageElements = document.querySelectorAll(".preimage-json");
 
@@ -744,9 +630,6 @@ const baseTemplate = [
   { key: "nLockTime", value: "4-byte little-endian" },
   { key: "nHashType", value: "4-byte little-endian" },
 ];
-
-
-
 
 const zeroHashField = { key: "32-byte zero hash", value: "" };
 
@@ -826,14 +709,30 @@ function logTooltipJSON() {
   });
 }
 
+// Helper function to reverse the byte order
+function reverseEndian(hexString) {
+  return hexString.match(/.{2}/g).reverse().join("");
+}
 
+// Convert bitcoins to satoshis
+document.getElementById("btcToSatoshisButton").addEventListener("click", function () {
+  const btc = parseFloat(document.getElementById("btcToSatoshis").value);
+  const satoshis = Math.round(btc * 100000000);
+  document.getElementById("btcToSatoshisResult").textContent = satoshis;
+});
 
-/* document.querySelectorAll('#sighashMenu a').forEach((menuItem) => {
-  menuItem.addEventListener('click', (event) => {
-    event.preventDefault();
-    const selectedSighash = event.target.dataset.sighash;
-    document.getElementById('sighashTemplateContainer').textContent = sighashTemplates[selectedSighash];
-  });
-}); */
- 
+// Convert decimal to hexadecimal
+document.getElementById("decimalToHexButton").addEventListener("click", function () {
+  const decimal = parseInt(document.getElementById("decimalToHex").value);
+  const hex = decimal.toString(16);
+  document.getElementById("decimalToHexResult").textContent = hex;
+});
+
+// Switch endianness
+document.getElementById("switchEndianButton").addEventListener("click", function () {
+  const hex = document.getElementById("switchEndian").value;
+  const switchedEndian = reverseEndian(hex);
+  document.getElementById("switchEndianResult").textContent = switchedEndian;
+});
+
 

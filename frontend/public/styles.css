@@ -246,6 +246,15 @@ h1, h2, h3 {
   border-left-color: rgba(0, 0, 0, 0.2);
 }
 
+.tooltip.show .tooltip-inner {
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.custom-btn {
+  font-size: 18px;
+  text-decoration: none;
+}
 
 
 
