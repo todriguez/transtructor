@@ -351,7 +351,7 @@ function getOutputs() {
   const outputs = [];
 
   for (let i = 0; i < outputCount; i++) {
-    const value = parseInt(document.getElementById(`outputValue-${i}`).value, 16);
+    const value = document.getElementById(`outputValue-${i}`).value; // Remove parseInt conversion
     const lockScript = document.getElementById(`outputlockScript-${i}`).value;
 
     const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
@@ -361,6 +361,7 @@ function getOutputs() {
 
   return outputs;
 }
+
 
 async function callBackendHashing(data) {
   const response = await fetch('http://203.18.30.236:8090/api/double-sha256', {
@@ -407,30 +408,30 @@ async function hashSingleOutput(output) {
 function displayPreImages(inputCount) {
   const preimagesContainer = document.getElementById("preimagesContainer");
 
-  // Remove existing preimage JSON containers
+  // Remove existing preimage form containers
   preimagesContainer.innerHTML = "";
 
-  // Create new preimage JSON containers
-  const preimageJSONTemplate = document.getElementById("preimageJSONTemplate");
+  // Create new preimage form containers
+  const preimageFormTemplate = document.getElementById("preimageJSONTemplate");
   for (let i = 0; i < inputCount; i++) {
-    const newPreimageJSON = preimageJSONTemplate.content.cloneNode(true);
-    newPreimageJSON.querySelector(".preimageIndex").textContent = i + 1;
+    const newPreimageForm = preimageFormTemplate.content.cloneNode(true);
+    newPreimageForm.querySelector(".preimageIndex").textContent = i + 1;
 
     // Add collapsible behavior
-    const collapseButton = newPreimageJSON.querySelector(".preimageToggle");
+    const collapseButton = newPreimageForm.querySelector(".preimageToggle");
     collapseButton.setAttribute("data-bs-target", `#preimageContent-${i}`);
 
-    const collapseContent = newPreimageJSON.querySelector(".preimageContent");
+    const collapseContent = newPreimageForm.querySelector(".preimageContent");
     collapseContent.id = `preimageContent-${i}`;
 
     // Set unique IDs for each form field
-    const formFields = newPreimageJSON.querySelectorAll(".form-control");
+    const formFields = newPreimageForm.querySelectorAll(".form-control");
     formFields.forEach((field) => {
       field.id = field.classList.item(1) + "-" + i;
     });
 
     // Add event listener to the hash buttons
-    const hashButtons = newPreimageJSON.querySelectorAll(".hashButton");
+    const hashButtons = newPreimageForm.querySelectorAll(".hashButton");
     hashButtons.forEach((button) => {
       button.addEventListener("click", async () => {
         let previousField, nextField;
@@ -440,18 +441,62 @@ function displayPreImages(inputCount) {
         } else if (button.classList.contains("hashSequenceButton")) {
           previousField = button.parentElement.querySelector(".Sequence");
           nextField = button.parentElement.querySelector(".hashSequence");
+        } else if (button.classList.contains("hashOutputsButton")) {
+          previousField = button.parentElement.querySelector(".Outputs");
+          nextField = button.parentElement.querySelector(".hashOutputs");
         }
         const hashedValue = await callBackendHashing(previousField.value);
         nextField.value = hashedValue;
       });
     });
 
-    preimagesContainer.appendChild(newPreimageJSON);
+    // Add event listener to the generate preimage button
+    const generatePreimageButton = newPreimageForm.querySelector(".generatePreimageButton");
+    generatePreimageButton.addEventListener("click", () => {
+      const preimageWrapper = generatePreimageButton.closest(".preimageWrapper");
+      const nVersion = preimageWrapper.querySelector(".nVersion").value;
+      const hashPrevouts = preimageWrapper.querySelector(".hashPrevouts").value;
+      const hashSequence = preimageWrapper.querySelector(".hashSequence").value;
+      const outpoint = preimageWrapper.querySelector(".outpoint").value;
+      const scriptCode = preimageWrapper.querySelector(".scriptCode").value;
+      const value = preimageWrapper.querySelector(".value").value;
+      const nSequence = preimageWrapper.querySelector(".nSequence").value;
+      const hashOutputs = preimageWrapper.querySelector(".hashOutputs").value;
+      const nLockTime = preimageWrapper.querySelector(".nLockTime").value;
+      const nHashType = preimageWrapper.querySelector(".nHashType").value;
+
+      const preimage = [
+        nVersion,
+        hashPrevouts,
+        hashSequence,
+        outpoint,
+        scriptCode,
+        value,
+        nSequence,
+        hashOutputs,
+        nLockTime,
+        nHashType,
+      ].join("");
+
+      preimageWrapper.querySelector(".preimage").value = preimage;
+
+      const preimageTableBody = document.querySelector(".preimageTableBody");
+      const preimageIndex = preimageWrapper.querySelector(".preimageIndex").textContent;
+
+      const newRow = preimageTableBody.insertRow();
+      newRow.insertCell().textContent = preimageIndex;
+      newRow.insertCell().textContent = preimage;
+    });
+
+
+    preimagesContainer.appendChild(newPreimageForm);
   }
 }
 
 
-async function handleHashButtonClick(event) {
+
+
+/* async function handleHashButtonClick(event) {
   const button = event.target;
   let previousField, nextField;
   if (button.classList.contains("hashPrevoutsButton")) {
@@ -463,7 +508,7 @@ async function handleHashButtonClick(event) {
   }
   const hashedValue = await callBackendHashing(previousField.value);
   nextField.value = hashedValue;
-}
+} */
 
 function parseVarInt(hex, start) {
   const firstByte = parseInt(hex.substr(start * 2, 2), 16);
