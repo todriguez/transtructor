@@ -113,33 +113,33 @@
             <button type="button" class="btn btn-link p-0 outputToggle" data-bs-toggle="collapse">
                 <h3>Output #<span class="outputIndex"></span></h3>
             </button>
-            <div class="collapse show outputContent">
-                <div class="mb-3">
-                    <label for="outputValue-0" class="form-label">Value:</label>
-                    <input type="text" class="form-control" name="outputValue" id="outputValue-0">
-                     <p>"Value" is an 8 byte Little Endian value designating the value in satoshis for the transaction output. This will need to be less than the value of the inputs, with an appropriate difference that will be collected by the mining node. The RegTest Node has a minminingtxfee=0.00000050 or 50 sats.</p>
+                <div class="collapse show outputContent">
+                    <div class="mb-3">
+                        <label for="outputValue-0" class="form-label">Value:</label>
+                        <input type="text" class="form-control" name="outputValue" id="outputValue-0">
+                        <p>"Value" is an 8 byte Little Endian value designating the value in satoshis for the transaction output. This will need to be less than the value of the inputs, with an appropriate difference that will be collected by the mining node. The RegTest Node has a minminingtxfee=0.00000050 or 50 sats.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="outputlockScriptSize-0" class="form-label">lockScript Size:</label>
+                        <input type="text" class="form-control" name="ouputlockScriptSize" id="outputlockScriptSize-0">
+                        <p>This is the length of the script that the payee choses to encumber the satoshis of the output behind.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="outputlockScript-0" class="form-label">lockScript:</label>
+                        <input type="text" class="form-control" name="outputlockScript" id="outputlockScript-0">
+                        <p>This is the script that needs to be solved to onspend the satoshis of the output.</p>
+                        <p>This is where the real magic of bitcoin happens, as this script can require the provision of any calculable number in Bitcoin's native language, Script.</p>
+                        <p>Bitcoin Script consists of 186 opcodes which can be used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation. </p>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="outputlockScriptSize-0" class="form-label">lockScript Size:</label>
-                    <input type="text" class="form-control" name="ouputlockScriptSize" id="outputlockScriptSize-0">
-                    <p>This is the length of the script that the payee choses to encumber the satoshis of the output behind.</p>
-                </div>
-                <div class="mb-3">
-                    <label for="outputlockScript-0" class="form-label">lockScript:</label>
-                    <input type="text" class="form-control" name="outputlockScript" id="outputlockScript-0">
-                    <p>This is the script that needs to be solved to onspend the satoshis of the output.</p>
-                    <p>This is where the real magic of bitcoin happens, as this script can require the provision of any calculable number in Bitcoin's native language, Script.</p>
-                    <p>Bitcoin Script consists of 186 opcodes which can be used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation. </p>
-                </div>
-            </div>
         </div>
-        </template>
+    </template>
         <input type="hidden" id="currentOutputIndex" value="1">
         <button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#outputContainersWrapper">
         <h2>Outputs:</h2>
         </button>
             <div id="outputContainersWrapper" class="collapse show">
-                <div id="outputContainers"></div>
+                    <div id="outputContainers"></div>
 
                 
                         <div class="mb-3">
@@ -149,84 +149,95 @@
                             <p>If the value of the transaction’s nLockTime field is less than 500,000,000 then the field represents a block height.</p>
                             <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
                         </div>
-            </div>
-            <button type="button" id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
+                </div>
+                <button type="button" id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button>
         </div>
+
         <div>
             <!-- Preimage Container -->
             <div class="container mt-5">
               <h2>Preimages</h2>
-          
-            <div id="transactionJSONContainer" class="mt-4"></div>
-          
-            <p>Fill in the fields below with the appropriate values extracted from the JSON displayed above, then click the button at the bottom of each preimage form to generate its SIGHASH preimage to be displayed in the table below. </p>
-
-
-            <div class="card mt-4">
-                <div class="card-header">
-                  <h3 class="mb-0">
-                    <button class="btn btn-link custom-btn" type="button" data-bs-toggle="collapse" data-bs-target="#helpfulTipsAndTools" aria-expanded="false" aria-controls="helpfulTipsAndTools">
-                      Click here for Helpful Tips and Tools
-                    </button>
-                  </h3>
-                </div>
-            <div id="helpfulTipsAndTools" class="collapse">
-                <div class="card-body"> 
-
-                       <p> Hover over each SIGHASH scheme to see its data template.</p> 
-                    <ul class="list-group mb-4" id="sighashMenu">
-                        <li class="list-group-item">SIGHASH_ALL</li>
-                        <li class="list-group-item">SIGHASH_NONE</li>
-                        <li class="list-group-item">SIGHASH_SINGLE</li>
-                        <li class="list-group-item">SIGHASH_ALL | SIGHASH_ANYONECANPAY</li>
-                        <li class="list-group-item">SIGHASH_NONE | SIGHASH_ANYONECANPAY</li>
-                        <li class="list-group-item">SIGHASH_SINGLE | SIGHASH_ANYONECANPAY</li>
-                    </ul>
-                    <p><ul>
-                        <li>outpoint: The txid part of the outpoint needs to be in little-endian format. In the Spendable Transaction Output JSON, the txid is in big-endian format. You will need to reverse the byte order of the txid before using it in the outpoint field. The vout part of the outpoint is already in little-endian format, so you don't need to change its endianness.</li>
-                        <li>nSequence: The nSequence value in the Spendable Transaction Output JSON is in big-endian format. You will need to convert it to little-endian format before using it in the nSequence field </li>
-                        <li>value: The value in the Spendable Transaction Output JSON is in decimal format. You need to convert it to satoshis (in integer format) and then represent it in little-endian hexadecimal format for the value field of the baseTemplate.</li>
-                        </ul></p>
-
-                            <!-- Input box for converting bitcoins to satoshis -->
-                            <div class="mb-3">
-                                <label for="btcToSatoshis" class="form-label">Bitcoins to Satoshis:</label>
-                                <input type="text" class="form-control" id="btcToSatoshis">
-                                <button id="btcToSatoshisButton" class="btn btn-primary mt-2" type="button">Convert</button>
-                                <p id="btcToSatoshisResult"></p>
-                            </div>
-
-                            <!-- Input box for converting decimal to hexadecimal -->
-                            <div class="mb-3">
-                                <label for="decimalToHex" class="form-label">Decimal to Hexadecimal:</label>
-                                <input type="text" class="form-control" id="decimalToHex">
-                                <button id="decimalToHexButton" class="btn btn-primary mt-2" type="button">Convert</button>
-                                <p id="decimalToHexResult"></p>
-                            </div>
-
-                            <!-- Input box for changing endianness -->
-                            <div class="mb-3">
-                                <label for="switchEndian" class="form-label">Switch Endianness:</label>
-                                <input type="text" class="form-control" id="switchEndian">
-                                <button id="switchEndianButton" class="btn btn-primary mt-2" type="button">Convert</button>
-                                <p id="switchEndianResult"></p>
-                            </div>
-                </div>
-            </div>
-          </div>
-        </div>    
-              
-                    <!-- Preimage JSON Container Template -->
-                    <template id="preimageJSONTemplate">
-                        <div class="col-md-12 preimageWrapper">
-                            <div class="preimageJSON">
-                                <button type="button" class="btn btn-link p-0 preimageToggle" data-bs-toggle="collapse" data-bs-target="#preimageContent-">
-                                    <h4>Preimage #<span class="preimageIndex"></span></h4>
+                <div id="transactionJSONContainer" class="mt-4"></div>
+                    <p>Fill in the fields below with the appropriate values extracted from the JSON displayed above. Some values will need to be gathered from the Spendable Transaction Output table as well.  Once you have populated the table, click the button at the bottom of each preimage form for its SIGHASH preimage to be displayed in the table below. </p>
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                <button class="btn btn-link custom-btn" type="button" data-bs-toggle="collapse" data-bs-target="#helpfulTipsAndTools" aria-expanded="false" aria-controls="helpfulTipsAndTools">
+                                    Click here for Helpful Tips and Tools
                                 </button>
-                                <div class="collapse preimageContent" id="preimageContent-">
-                                    <form class="preimageForm">
-                                        <label for="nVersion">nVersion (4-byte transaction version number)</label>
-                                        <input type="text" class="form-control nVersion">
+                            </h3>
+                        </div>
+                        <div id="helpfulTipsAndTools" class="collapse">
+                            <div class="card-body"> 
+                                <p> Hover over each SIGHASH scheme to see its data template.</p> 
+                                <ul class="list-group mb-4" id="sighashMenu">
+                                    <li class="list-group-item">SIGHASH_ALL</li>
+                                    <li class="list-group-item">SIGHASH_NONE</li>
+                                    <li class="list-group-item">SIGHASH_SINGLE</li>
+                                    <li class="list-group-item">SIGHASH_ALL | SIGHASH_ANYONECANPAY</li>
+                                    <li class="list-group-item">SIGHASH_NONE | SIGHASH_ANYONECANPAY</li>
+                                    <li class="list-group-item">SIGHASH_SINGLE | SIGHASH_ANYONECANPAY</li>
+                                </ul>
+                                <p><ul>
+                                    <li>outpoint: The txid part of the outpoint needs to be in little-endian format. In the Spendable Transaction Output JSON, the txid is in big-endian format. You will need to reverse the byte order of the txid before using it in the outpoint field. The vout part of the outpoint is already in little-endian format, so you don't need to change its endianness.</li>
+                                    <li>nSequence: The nSequence value in the Spendable Transaction Output JSON is in big-endian format. You will need to convert it to little-endian format before using it in the nSequence field </li>
+                                    <li>value: The value in the Spendable Transaction Output JSON is in decimal format. You need to convert it to satoshis (in integer format) and then represent it in little-endian hexadecimal format for the value field of the baseTemplate.</li>
+                                    </ul>
+                                </p>
+
+                                <!-- Input box for converting bitcoins to satoshis -->
+                                <div class="mb-3">
+                                    <label for="btcToSatoshis" class="form-label">Bitcoins to Satoshis:</label>
+                                    <input type="text" class="form-control" id="btcToSatoshis">
+                                    <button id="btcToSatoshisButton" class="btn btn-primary mt-2" type="button">Convert</button>
+                                    <p id="btcToSatoshisResult"></p>
+                                </div>
+
+                                <!-- Input box for converting decimal to hexadecimal -->
+                                <div class="mb-3">
+                                    <label for="decimalToHex" class="form-label">Decimal to Hexadecimal:</label>
+                                    <input type="text" class="form-control" id="decimalToHex">
+                                    <button id="decimalToHexButton" class="btn btn-primary mt-2" type="button">Convert</button>
+                                    <p id="decimalToHexResult"></p>
+                                </div>
+
+                                <!-- Input box for changing endianness -->
+                                <div class="mb-3">
+                                    <label for="switchEndian" class="form-label">Switch Endianness:</label>
+                                    <input type="text" class="form-control" id="switchEndian">
+                                    <button id="switchEndianButton" class="btn btn-primary mt-2" type="button">Convert</button>
+                                    <p id="switchEndianResult"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="preimagesContainer" class="row">
+                        <div>
+                          <table id="preimageTable">
+                            <thead>
+                              <tr>
+                                <th>Input #</th>
+                                <th>Preimage</th>
+                              </tr>
+                            </thead>
+                            <tbody id="preimageTableBody"></tbody>
+                          </table>
+                        </div>
+                        <div id="preimageJSONContainer"></div>
+                      </div>
+                </div>    
+              
+                 <!-- Preimage JSON Container Template -->
+                <template id="preimageJSONTemplate">
+                <div class="col-md-12 preimageWrapper">
+                     <div class="preimageJSON">
+                        <button type="button" class="btn btn-link p-0 preimageToggle" data-bs-toggle="collapse" data-bs-target="#preimageContent-">
+                            <h4>Preimage #<span class="preimageIndex"></span></h4>
+                        </button>
+                            <div class="collapse preimageContent" id="preimageContent-">
+                                <form class="preimageForm">
+                                    <label for="nVersion">nVersion (4-byte transaction version number)</label>
+                                    <input type="text" class="form-control nVersion">
                                         <div class="form-group">
                                             <label for="Prevouts">Prevouts (transaction input outpoints)</label>
                                             <input type="text" class="form-control Prevouts">
@@ -267,44 +278,33 @@
                                         </div>
                                         <button class="hashButton hashOutputsButton btn btn-primary mb-3" type="button">Hash Data</button>
                                         <div class="form-group">
-                                        <label for="hashOutputs">hashOutputs (32-byte hash of output values and lockScripts)</label>
-                                        <input type="text" class="form-control hashOutputs">
+                                            <label for="hashOutputs">hashOutputs (32-byte hash of output values and lockScripts)</label>
+                                            <input type="text" class="form-control hashOutputs">
                                         </div>
                                         <div class="form-group">
-                                        <label for="nLockTime">nLockTime (4-byte transaction lock time)</label>
-                                        <input type="text" class="form-control nLockTime">
+                                            <label for="nLockTime">nLockTime (4-byte transaction lock time)</label>
+                                            <input type="text" class="form-control nLockTime">
                                         </div>
-                                        <div class="form-group">
-                                        <label for="nHashType">nHashType (4-byte SIGHASH type, in little-endian format)</label>
+                                            <div class="form-group">
+                                            <label for="nHashType">nHashType (4-byte SIGHASH type, in little-endian format)</label>
                                         <input type="text" class="form-control nHashType">
-                                        </div>
-                                        <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
-                                        <div class="form-group">
-                                        <label for="preimage">SIGHASH Preimage</label>
-                                        <input type="text" class="form-control preimage" readonly>
-                                        </div>
-                                        </form>
-                                        </div>
-                                        </div>
-                                        </div>
-                                        </template>
+                            </div>
+                                <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
+                                <div class="form-group">
+                                    <label for="preimage">SIGHASH Preimage</label>
+                                    <input type="text" class="form-control preimage" readonly>
+                                </div>
+                                </form>
+                    </div>
+                </div>
+        </div>
+    </template>
 
-        <div id="preimagesContainer" class="row">
-            <div>
-                <table class="table table-striped table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Input #</th>
-                        <th>Preimage</th>
-                      </tr>
-                    </thead>
-                    <tbody class="preimageTableBody">
-                    </tbody>
-                  </table>
-            </div>
+    
+      
+      
+                                        
 
-          </div>
-                                        </div>
 
                 
                       

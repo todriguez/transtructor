@@ -411,6 +411,30 @@ function displayPreImages(inputCount) {
   // Remove existing preimage form containers
   preimagesContainer.innerHTML = "";
 
+  // Add preimageTable element to preimagesContainer
+  const table = document.createElement("table");
+  table.id = "preimageTable"; // Add an ID to the table
+  table.classList.add("table"); // Add the table class for Bootstrap styling
+
+  const thead = document.createElement("thead");
+  const tr = document.createElement("tr");
+
+  const th1 = document.createElement("th");
+  th1.textContent = "Input";
+  tr.appendChild(th1);
+
+  const th2 = document.createElement("th");
+  th2.textContent = "SIGHASH Preimage";
+  tr.appendChild(th2);
+
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  const preimageTableBody = document.createElement("tbody");
+  preimageTableBody.id = "preimageTableBody";
+  table.appendChild(preimageTableBody);
+  preimagesContainer.appendChild(table);
+
   // Create new preimage form containers
   const preimageFormTemplate = document.getElementById("preimageJSONTemplate");
   for (let i = 0; i < inputCount; i++) {
@@ -480,18 +504,83 @@ function displayPreImages(inputCount) {
 
       preimageWrapper.querySelector(".preimage").value = preimage;
 
-      const preimageTableBody = document.querySelector(".preimageTableBody");
+      const preimageTableBody = document.getElementById("preimageTableBody");
       const preimageIndex = preimageWrapper.querySelector(".preimageIndex").textContent;
 
       const newRow = preimageTableBody.insertRow();
-      newRow.insertCell().textContent = preimageIndex;
-      newRow.insertCell().textContent = preimage;
+      newRow.innerHTML = `
+        <td>${preimageIndex}</td>
+        <td>${preimage}</td>
+      `;
+      preimageTableBody.appendChild(newRow);
+
+      // Create and display the JSON container for the sighash preimage
+      const preimageObj = {
+        nVersion,
+        hashPrevouts,
+        hashSequence,
+        outpoint,
+        scriptCode,
+        value,
+        nSequence,
+        hashOutputs,
+        nLockTime,
+        nHashType
+      };
+      const preimageJSON = createPaginatedSighashPreimageJSON(i, preimageObj); // Use 'i' instead of 'preimageIndex'
+      preimageWrapper.appendChild(preimageJSON); // Append the JSON container to the preimageWrapper instead of lastPreimageForm
     });
 
-
     preimagesContainer.appendChild(newPreimageForm);
-  }
+  } // Close the for loop here
+} // Close the function hereose the function here
+
+
+
+
+function createSighashPreimageJSON(
+  nVersion, hashPrevouts, hashSequence, outpoint, scriptCode, value, nSequence,
+  hashOutputs, nLockTime, nHashType
+) {
+  const jsonContainer = document.createElement("div");
+  jsonContainer.className = "preimageJSON individualPreimageJSON";
+
+  const jsonContent = {
+    nVersion,
+    hashPrevouts,
+    hashSequence,
+    outpoint,
+    scriptCode,
+    value,
+    nSequence,
+    hashOutputs,
+    nLockTime,
+    nHashType,
+  };
+
+  const jsonCode = document.createElement("pre");
+  jsonCode.textContent = JSON.stringify(jsonContent, null, 2);
+  jsonContainer.appendChild(jsonCode);
+
+  // Apply color coding to the SIGHASH preimage
+  const preimageFields = [
+    "nVersion", "hashPrevouts", "hashSequence", "outpoint", "scriptCode", "value",
+    "nSequence", "hashOutputs", "nLockTime", "nHashType"
+  ];
+
+  preimageFields.forEach((field, index) => {
+    const fieldRegex = new RegExp(`"${field}":\\s+"([^"]+)"`, "g");
+    jsonCode.innerHTML = jsonCode.innerHTML.replace(fieldRegex, (match, value) => {
+      const color = `hsl(${index * 36}, 100%, 50%)`;
+      return `"${field}": <span style="color: ${color};">${value}</span>`;
+    });
+  });
+
+  return jsonContainer;
 }
+
+
+
 
 
 
@@ -779,5 +868,30 @@ document.getElementById("switchEndianButton").addEventListener("click", function
   const switchedEndian = reverseEndian(hex);
   document.getElementById("switchEndianResult").textContent = switchedEndian;
 });
+
+
+function createPaginatedSighashPreimageJSON(inputIndex, preimageObj) {
+  const container = document.createElement("div");
+  container.classList.add("sighashPreimageJSON", "mb-3");
+
+  const preimageJSON = JSON.stringify(preimageObj, null, 2)
+    .replace(/"nVersion":\s"(.*?)"/g, '<span class="jsonValue text-success">"nVersion": "$1"</span>')
+    .replace(/"hashPrevouts":\s"(.*?)"/g, '<span class="jsonValue text-primary">"hashPrevouts": "$1"</span>')
+    .replace(/"hashSequence":\s"(.*?)"/g, '<span class="jsonValue text-info">"hashSequence": "$1"</span>')
+    .replace(/"outpoint":\s"(.*?)"/g, '<span class="jsonValue text-warning">"outpoint": "$1"</span>')
+    .replace(/"scriptCode":\s"(.*?)"/g, '<span class="jsonValue text-danger">"scriptCode": "$1"</span>')
+    .replace(/"value":\s"(.*?)"/g, '<span class="jsonValue text-secondary">"value": "$1"</span>')
+    .replace(/"nSequence":\s"(.*?)"/g, '<span class="jsonValue text-success">"nSequence": "$1"</span>')
+    .replace(/"hashOutputs":\s"(.*?)"/g, '<span class="jsonValue text-primary">"hashOutputs": "$1"</span>')
+    .replace(/"nLockTime":\s"(.*?)"/g, '<span class="jsonValue text-info">"nLockTime": "$1"</span>')
+    .replace(/"nHashType":\s"(.*?)"/g, '<span class="jsonValue text-warning">"nHashType": "$1"</span>');
+
+  container.innerHTML = `
+    <h5>Input #${inputIndex + 1} Preimage JSON:</h5>
+    <pre>${preimageJSON}</pre>
+  `;
+
+  return container;
+}
 
 
