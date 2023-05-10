@@ -39,8 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputCount = parseInt(document.querySelector("#inputCount").value);
     const transaction = createTransactionFromForm();
     displayTransactionJSON(transaction);
-    displayPreImages(inputCount);
+    generatePreimageTemplates(inputCount); // Add this line
   });
+  
 
   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
   document.querySelector('#mineBlocks').addEventListener('click', mineBlocks);
@@ -64,15 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  document.addEventListener("keydown", function(event) {
-    if (event.key === "Tab") {
-      event.preventDefault();
-      var nextField = event.target.nextElementSibling;
-      if (nextField) {
-        nextField.focus();
-      }
-    }
-  });
 
   document.addEventListener("paste", function(event) {
     var clipboardData = event.clipboardData.getData("text/plain");
@@ -431,11 +423,130 @@ async function hashSingleOutput(output) {
   return await callBackendHashing(buffer);
 }
 
-function displayPreImages(inputCount) {
+
+function generatePreimageTemplates(inputCount) {
+  const preimagesContainer = document.getElementById("preimagesContainer");
+  const preimageFormTemplate = document.getElementById("preimageFormTemplate");
+
+  // Remove any existing preimage forms
+  const existingPreimageWrappers = preimagesContainer.querySelectorAll(".preimageWrapper");
+  existingPreimageWrappers.forEach((element) => {
+    preimagesContainer.removeChild(element);
+  });
+
+  // Generate the new preimage forms
+  for (let i = 0; i < inputCount; i++) {
+    const preimageWrapper = preimageFormTemplate.content.cloneNode(true);
+
+    preimageWrapper.querySelector(".preimageIndex").innerText = i + 1;
+    preimageWrapper.querySelector(".preimageToggle").dataset.bsTarget = `#preimageContent-${i}`;
+    preimageWrapper.querySelector(".preimageContent").id = `preimageContent-${i}`;
+
+    preimagesContainer.appendChild(preimageWrapper);
+  }
+
+  // Call displayPreimages after creating the new preimage forms
+  displayPreimages();
+}
+
+
+async function displayPreimages() {
+  const preimageForms = document.querySelectorAll(".preimageForm");
+  const preimageTableBody = document.getElementById("preimageTableBody");
+  const preimageJSONContainer = document.getElementById("preimageJSONContainer");
+
+  // Iterate over each preimage form, extract the values, and display the preimage
+  for (let i = 0; i < preimageForms.length; i++) {
+    const preimageForm = preimageForms[i];
+
+    const hashButtons = preimageForm.querySelectorAll(".hashButton");
+    hashButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        let previousField, nextField;
+        if (button.classList.contains("hashPrevoutsButton")) {
+          previousField = button.parentElement.querySelector(".Prevouts");
+          nextField = button.parentElement.querySelector(".hashPrevouts");
+        } else if (button.classList.contains("hashSequenceButton")) {
+          previousField = button.parentElement.querySelector(".Sequence");
+          nextField = button.parentElement.querySelector(".hashSequence");
+        } else if (button.classList.contains("hashOutputsButton")) {
+          previousField = button.parentElement.querySelector(".Outputs");
+          nextField = button.parentElement.querySelector(".hashOutputs");
+        }
+        const hashedValue = await callBackendHashing(previousField.value);
+        nextField.value = hashedValue;
+      });
+    });
+
+    const generatePreimageButton = preimageForm.querySelector(".generatePreimageButton");
+    generatePreimageButton.addEventListener("click", () => {
+      const preimageWrapper = generatePreimageButton.closest(".preimageWrapper");
+      const nVersion = preimageWrapper.querySelector(".nVersion").value;
+      const hashPrevouts = preimageWrapper.querySelector(".hashPrevouts").value;
+      const hashSequence = preimageWrapper.querySelector(".hashSequence").value;
+      const outpoint = preimageWrapper.querySelector(".outpoint").value;
+      const scriptCode = preimageWrapper.querySelector(".scriptCode").value;
+      const value = preimageWrapper.querySelector(".value").value;
+      const nSequence = preimageWrapper.querySelector(".nSequence").value;
+      const hashOutputs = preimageWrapper.querySelector(".hashOutputs").value;
+      const nLockTime = preimageWrapper.querySelector(".nLockTime").value;
+      const nHashType = preimageWrapper.querySelector(".nHashType").value;
+
+      const preimage = [
+        nVersion,
+        hashPrevouts,
+        hashSequence,
+        outpoint,
+        scriptCode,
+        value,
+        nSequence,
+        hashOutputs,
+        nLockTime,
+        nHashType,
+      ].join("");
+
+      preimageWrapper.querySelector(".preimage").value = preimage;
+
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${preimage}</td>
+      `;
+      preimageTableBody.appendChild(newRow);
+
+      const preimageObj = {
+        nVersion,
+        hashPrevouts,
+        hashSequence,
+        outpoint,
+        scriptCode,
+        value,
+        nSequence,
+        hashOutputs,
+        nLockTime,
+        nHashType
+      };
+      const preimageJSON = createPaginatedSighashPreimageJSON(i, preimageObj);
+      preimageJSONContainer.appendChild(preimageJSON);
+    });
+  }
+}
+
+
+
+
+
+
+/* function displayPreImages(inputCount, sighashContainer) {
   const preimagesContainer = document.getElementById("preimagesContainer");
 
   // Remove existing preimage form containers
   preimagesContainer.innerHTML = "";
+
+  // Remove existing preimage form containers
+  if (sighashContainer) { // Check if the sighashContainer parameter is defined
+    sighashContainer.innerHTML = "";
+  }
 
   // Add preimageTable element to preimagesContainer
   const table = document.createElement("table");
@@ -530,36 +641,61 @@ function displayPreImages(inputCount) {
 
       preimageWrapper.querySelector(".preimage").value = preimage;
 
-      const preimageTableBody = document.getElementById("preimageTableBody");
-      const preimageIndex = preimageWrapper.querySelector(".preimageIndex").textContent;
+      const newRow = document.createElement("tr");
+newRow.innerHTML = `
+  <td>${i + 1}</td>
+  <td>${preimage}</td>
+`;
+preimageTableBody.appendChild(newRow);
 
-      const newRow = preimageTableBody.insertRow();
-      newRow.innerHTML = `
-        <td>${preimageIndex}</td>
-        <td>${preimage}</td>
-      `;
-      preimageTableBody.appendChild(newRow);
+// Create and display the JSON container for the sighash preimage
+const preimageObj = {
+  nVersion,
+  hashPrevouts,
+  hashSequence,
+  outpoint,
+  scriptCode,
+  value,
+  nSequence,
+  hashOutputs,
+  nLockTime,
+  nHashType
+};
+const preimageJSON = createPaginatedSighashPreimageJSON(i, preimageObj);
+preimageWrapper.appendChild(preimageJSON);
 
-      // Create and display the JSON container for the sighash preimage
-      const preimageObj = {
-        nVersion,
-        hashPrevouts,
-        hashSequence,
-        outpoint,
-        scriptCode,
-        value,
-        nSequence,
-        hashOutputs,
-        nLockTime,
-        nHashType
-      };
-      const preimageJSON = createPaginatedSighashPreimageJSON(i, preimageObj); // Use 'i' instead of 'preimageIndex'
-      preimageWrapper.appendChild(preimageJSON); // Append the JSON container to the preimageWrapper instead of lastPreimageForm
-    });
+if (sighashContainer) {
+  sighashContainer.appendChild(newRow.cloneNode(true));
+  sighashContainer.appendChild(preimageJSON.cloneNode(true));
+}
 
-    preimagesContainer.appendChild(newPreimageForm);
-  } // Close the for loop here
-} // Close the function hereose the function here
+}); */
+
+  /* // Append the cloned preimageJSONContainer and preimageTable elements to the sighashContainer
+  if (sighashContainer) {
+    const clonedSighashPreimageForm = sighashContainer.querySelector(`#preimageContent-${i}`).closest('.preimageWrapper');
+    clonedSighashPreimageForm.appendChild(preimageJSON.cloneNode(true));
+
+    const existingClonedTable = sighashContainer.querySelector('#preimageTable');
+    if (!existingClonedTable) {
+      const clonedTable = document.querySelector('#preimageTable').cloneNode(true);
+      clonedTable.querySelector('tbody').innerHTML = newRow.outerHTML; // Copy the newRow content to the cloned table
+      sighashContainer.appendChild(clonedTable);
+    } else {
+      const clonedNewRow = newRow.cloneNode(true);
+      existingClonedTable.querySelector('tbody').appendChild(clonedNewRow);
+    }
+  }
+}); */
+
+
+/* preimagesContainer.appendChild(newPreimageForm);
+if (sighashContainer) { // Check if the sighashContainer parameter is defined
+  sighashContainer.appendChild(newPreimageForm.cloneNode(true));
+} */
+
+/*   } // Close the for loop here
+} // Close the function here */
 
 
 
@@ -679,8 +815,48 @@ document.getElementById("outputCount").addEventListener("change", (event) => {
   createOutputContainers(event);
 });
 
-
 function updateInputOrOutputContainers(containerType) {
+  const countField = document.querySelector(`#${containerType}Count`);
+  const countHex = countField.value;
+  const count = parseInt(parseVarInt(countHex, 0).value, 16);
+  const maxCount = 5;
+
+  console.log(`${containerType} count:`, count);
+
+  if (count <= maxCount) {
+    const containers = document.getElementById(`${containerType}Containers`);
+
+    // Clear the containers div before adding new ones
+    containers.innerHTML = "";
+
+    const containerTemplate = document.getElementById(`${containerType}ContainerTemplate`);
+
+    for (let i = 0; i < count; i++) {
+      const newContainer = containerTemplate.content.cloneNode(true);
+      newContainer.querySelector(`.${containerType}Index`).textContent = i + 1;
+
+      // Add collapsible behavior
+      const collapseButton = newContainer.querySelector(`button[data-bs-toggle="collapse"]`);
+      collapseButton.setAttribute("data-bs-target", `#${containerType}Content-${i}`);
+
+      const collapseContent = newContainer.querySelector(".collapse");
+      collapseContent.id = `${containerType}Content-${i}`;
+
+      // Set unique ids for the fields
+      newContainer.querySelectorAll("input, select").forEach((element) => {
+        const name = element.getAttribute("name");
+        element.id = `${name}-${i}`;
+      });
+
+      // Append the new container as a child of the parent div
+      containers.appendChild(newContainer);
+    }
+  }
+}
+
+
+
+/* function updateInputOrOutputContainers(containerType) {
   const countField = document.querySelector(`#${containerType}Count`);
   const countHex = countField.value;
   const count = parseInt(parseVarInt(countHex, 0).value, 16);
@@ -722,7 +898,7 @@ function updateInputOrOutputContainers(containerType) {
   if (containerType === "input") {
     displayPreImages(count);
   }
-}
+} */
 
 
 function displayTransactionJSON(transaction) {
@@ -919,5 +1095,39 @@ function createPaginatedSighashPreimageJSON(inputIndex, preimageObj) {
 
   return container;
 }
+
+function updateSighashContainer(newRow, preimageJSON) {
+  const sighashContainer = document.querySelector('#sighashContainer');
+  const existingTable = sighashContainer.querySelector('#preimageTable');
+  
+  if (!existingTable) {
+    const clonedTable = document.querySelector('#preimageTable').cloneNode(true);
+    clonedTable.querySelector('tbody').innerHTML = newRow.outerHTML;
+    sighashContainer.appendChild(clonedTable);
+  } else {
+    existingTable.querySelector('tbody').appendChild(newRow.cloneNode(true));
+  }
+
+  sighashContainer.appendChild(preimageJSON.cloneNode(true));
+}
+
+
+/* async function createSighash() {
+  const preimageTableBody = document.getElementById("preimageTableBody");
+  const numberOfRows = preimageTableBody.rows.length;
+
+  for (let i = 0; i < numberOfRows; i++) {
+    const row = preimageTableBody.rows[i];
+    const preimageCell = row.cells[1];
+    const preimage = preimageCell.textContent;
+
+    // Call the backend hashing function to get the SIGHASH
+    const sighash = await callBackendHashing(preimage);
+
+    // Update the table cell with the SIGHASH value
+    const sighashCell = row.cells[2];
+    sighashCell.textContent = sighash;
+  }
+} */
 
 

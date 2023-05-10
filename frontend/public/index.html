@@ -224,7 +224,7 @@
                         </div>
                     </div>
                     <div id="preimagesContainer" class="row">
-                        <div>
+                        <!-- <div>
                           <table id="preimageTable">
                             <thead>
                               <tr>
@@ -235,19 +235,19 @@
                             <tbody id="preimageTableBody"></tbody>
                           </table>
                         </div>
-                        <div id="preimageJSONContainer"></div>
-                      </div>
+                        <div id="preimageJSONContainer"></div> -->
+                    </div>
                 </div>    
               
                  <!-- Preimage JSON Container Template -->
-                <template id="preimageJSONTemplate">
+                <template id="preimageFormTemplate">
                 <div class="col-md-12 preimageWrapper">
-                     <div class="preimageJSON">
-                        <button type="button" class="btn btn-link p-0 preimageToggle" data-bs-toggle="collapse" data-bs-target="#preimageContent-">
+<!--                      <div class="preimageFormTemplate">
+ -->                        <button type="button" class="btn btn-link p-0 preimageToggle" data-bs-toggle="collapse" data-bs-target="#preimageContent-">
                             <h4>Preimage #<span class="preimageIndex"></span></h4>
-                        </button>
+                            </button>
                             <div class="collapse preimageContent" id="preimageContent-">
-                                <form class="preimageForm">
+                            <form class="preimageForm">
                                     <label for="nVersion">nVersion (4-byte transaction version number)</label>
                                     <input type="text" class="form-control nVersion">
                                         <div class="form-group">
@@ -297,19 +297,19 @@
                                             <label for="nLockTime">nLockTime (4-byte transaction lock time)</label>
                                             <input type="text" class="form-control nLockTime">
                                         </div>
-                                            <div class="form-group">
+                                        <div class="form-group">
                                             <label for="nHashType">nHashType (4-byte SIGHASH type, in little-endian format)</label>
-                                        <input type="text" class="form-control nHashType">
-                            </div>
+                                            <input type="text" class="form-control nHashType">
+                                        </div>
                                 <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
                                 <div class="form-group">
                                     <label for="preimage">SIGHASH Preimage</label>
                                     <input type="text" class="form-control preimage" readonly>
                                 </div>
-                                </form>
-                    </div>
+                            </form>
+                            </div>
                 </div>
-        </div>
+        
     </template>
 
     
@@ -320,12 +320,26 @@
 
                 
                       
-                  <div>
+                <div>
                     <h2>Sighash</h2>
+                    <div id="sighashContainer" class="mt-4">
+                    <div id="preimageTableContainer">
+                        <table id="preimageTable">
+                        <thead>
+                            <tr>
+                            <th>Input #</th>
+                            <th>Preimage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preimageTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="preimageJSONContainer"></div>
+                    </div>
                     <button id="createSighashButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Create Sighash</button>
                     <p>Now when we press the button, the PreImage will be double hashed with SHA256 to create the SigHash </p>
-                    <div id="sighashContainer" class="mt-4"></div>
-                  </div>
+                </div>
+      
                   
             </div>
                 <div>
