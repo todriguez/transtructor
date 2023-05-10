@@ -481,57 +481,177 @@ async function displayPreimages() {
     const generatePreimageButton = preimageForm.querySelector(".generatePreimageButton");
     generatePreimageButton.addEventListener("click", () => {
       const preimageWrapper = generatePreimageButton.closest(".preimageWrapper");
-      const nVersion = preimageWrapper.querySelector(".nVersion").value;
-      const hashPrevouts = preimageWrapper.querySelector(".hashPrevouts").value;
-      const hashSequence = preimageWrapper.querySelector(".hashSequence").value;
-      const outpoint = preimageWrapper.querySelector(".outpoint").value;
-      const scriptCode = preimageWrapper.querySelector(".scriptCode").value;
-      const value = preimageWrapper.querySelector(".value").value;
-      const nSequence = preimageWrapper.querySelector(".nSequence").value;
-      const hashOutputs = preimageWrapper.querySelector(".hashOutputs").value;
-      const nLockTime = preimageWrapper.querySelector(".nLockTime").value;
-      const nHashType = preimageWrapper.querySelector(".nHashType").value;
+      const fields = [
+        { name: "nVersion", class: "text-nversion" },
+        { name: "hashPrevouts", class: "text-hashprevouts" },
+        { name: "hashSequence", class: "text-hashsequence" },
+        { name: "outpoint", class: "text-outpoint" },
+        { name: "scriptCode", class: "text-scriptcode" },
+        { name: "value", class: "text-value" },
+        { name: "nSequence", class: "text-nsequence" },
+        { name: "hashOutputs", class: "text-hashoutputs" },
+        { name: "nLockTime", class: "text-nlocktime" },
+        { name: "nHashType", class: "text-nhashtype" },
+      ];
 
-      const preimage = [
-        nVersion,
-        hashPrevouts,
-        hashSequence,
-        outpoint,
-        scriptCode,
-        value,
-        nSequence,
-        hashOutputs,
-        nLockTime,
-        nHashType,
-      ].join("");
+      const preimageObj = {};
+      fields.forEach(({ name }) => {
+        preimageObj[name] = preimageWrapper.querySelector(`.${name}`).value;
+      });
+
+      const preimage = fields.map(({ name }) => preimageObj[name]).join("");
 
       preimageWrapper.querySelector(".preimage").value = preimage;
 
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${preimage}</td>
-      `;
-      preimageTableBody.appendChild(newRow);
+    const newRow = document.createElement("tr");
+    const colorCodedPreimage = fields
+      .map(({ name, class: className }) => `<span class="${className}">${preimageObj[name]}</span>`)
+      .join("");
 
-      const preimageObj = {
-        nVersion,
-        hashPrevouts,
-        hashSequence,
-        outpoint,
-        scriptCode,
-        value,
-        nSequence,
-        hashOutputs,
-        nLockTime,
-        nHashType
-      };
-      const preimageJSON = createPaginatedSighashPreimageJSON(i, preimageObj);
-      preimageJSONContainer.appendChild(preimageJSON);
-    });
+    newRow.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${colorCodedPreimage}</td>
+    `;
+    preimageTableBody.appendChild(newRow);
+
+    const preimageJSON = createSighashPreimageJSON(i, preimageObj.nVersion, preimageObj.hashPrevouts, preimageObj.hashSequence, preimageObj.outpoint, preimageObj.scriptCode, preimageObj.value, preimageObj.nSequence, preimageObj.hashOutputs, preimageObj.nLockTime, preimageObj.nHashType);
+    preimageJSONContainer.appendChild(preimageJSON);
+  });
   }
+        // Call the generatePagination function
+          generatePagination(preimageForms.length);
+
+        // Hide all preimage JSONs except the first one
+        const preimageJSONs = document.querySelectorAll(".preimageJSON:not(:first-child)");
+        preimageJSONs.forEach((element) => {
+          element.style.display = "none";
+        });
+
+
 }
 
+function createSighashPreimageJSON(inputIndex, nVersion, hashPrevouts, hashSequence, outpoint, scriptCode, value, nSequence, hashOutputs, nLockTime, nHashType) {
+  const container = document.createElement("div");
+  container.classList.add("sighashPreimageJSON", "mb-3", "preimageJSON");
+
+  const preimageObj = {
+    nVersion,
+    hashPrevouts,
+    hashSequence,
+    outpoint,
+    scriptCode,
+    value,
+    nSequence,
+    hashOutputs,
+    nLockTime,
+    nHashType,
+  };
+
+  const preimageJSON = JSON.stringify(preimageObj, null, 2)
+    .replace(/"nVersion":\s"(.*?)"/g, '<span class="jsonValue text-success">"nVersion": "$1"</span>')
+    .replace(/"hashPrevouts":\s"(.*?)"/g, '<span class="jsonValue text-primary">"hashPrevouts": "$1"</span>')
+    .replace(/"hashSequence":\s"(.*?)"/g, '<span class="jsonValue text-info">"hashSequence": "$1"</span>')
+    .replace(/"outpoint":\s"(.*?)"/g, '<span class="jsonValue text-warning">"outpoint": "$1"</span>')
+    .replace(/"scriptCode":\s"(.*?)"/g, '<span class="jsonValue text-danger">"scriptCode": "$1"</span>')
+    .replace(/"value":\s"(.*?)"/g, '<span class="jsonValue text-secondary">"value": "$1"</span>')
+    .replace(/"nSequence":\s"(.*?)"/g, '<span class="jsonValue text-success">"nSequence": "$1"</span>')
+    .replace(/"hashOutputs":\s"(.*?)"/g, '<span class="jsonValue text-primary">"hashOutputs": "$1"</span>')
+    .replace(/"nLockTime":\s"(.*?)"/g, '<span class="jsonValue text-info">"nLockTime": "$1"</span>')
+    .replace(/"nHashType":\s"(.*?)"/g, '<span class="jsonValue text-warning">"nHashType": "$1"</span>');
+
+  container.innerHTML = `
+    <h5>Input #${inputIndex + 1} Preimage JSON:</h5>
+    <pre>${preimageJSON}</pre>
+  `;
+
+  container.style.display = inputIndex === 0 ? "block" : "none";
+  container.id = `preimageJSON-${inputIndex}`;
+
+  return container;
+}
+
+function generatePagination(numPages) {
+  const paginationElement = document.getElementById("preimageJSONPagination");
+
+  for (let i = 0; i < numPages; i++) {
+    const paginationItem = document.createElement("li");
+    paginationItem.classList.add("page-item");
+
+    const paginationLink = document.createElement("a");
+    paginationLink.classList.add("page-link");
+    paginationLink.textContent = i + 1;
+    paginationLink.href = "#";
+
+    paginationItem.appendChild(paginationLink);
+    paginationElement.appendChild(paginationItem);
+
+    paginationLink.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      // Hide all preimage JSONs
+      const preimageJSONs = document.querySelectorAll(".preimageJSON");
+      preimageJSONs.forEach((element) => {
+        element.style.display = "none";
+      });
+
+      // Show the selected preimage JSON
+      const selectedPreimageJSON = document.getElementById(`preimageJSON-${i}`);
+      selectedPreimageJSON.style.display = "block";
+
+      // Update the active pagination item
+      const activePaginationItem = paginationElement.querySelector(".active");
+      if (activePaginationItem) {
+        activePaginationItem.classList.remove("active");
+      }
+      paginationItem.classList.add("active");
+    });
+  }
+
+  // Set the first pagination item as active by default
+  paginationElement.querySelector(".page-item").classList.add("active");
+}
+
+
+/* function generatePagination(numPages) {
+  const paginationElement = document.getElementById("preimageJSONPagination");
+
+  for (let i = 0; i < numPages; i++) {
+    const paginationItem = document.createElement("li");
+    paginationItem.classList.add("page-item");
+
+    const paginationLink = document.createElement("a");
+    paginationLink.classList.add("page-link");
+    paginationLink.textContent = i + 1;
+    paginationLink.href = "#";
+
+    paginationItem.appendChild(paginationLink);
+    paginationElement.appendChild(paginationItem);
+
+    paginationLink.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      // Hide all preimage JSONs
+      const preimageJSONs = document.querySelectorAll(".preimageJSON");
+      preimageJSONs.forEach((element) => {
+        element.style.display = "none";
+      });
+
+      // Show the selected preimage JSON
+      const selectedPreimageJSON = document.getElementById(`preimageJSON-${i}`);
+      selectedPreimageJSON.style.display = "block";
+
+      // Update the active pagination item
+      const activePaginationItem = paginationElement.querySelector(".active");
+      if (activePaginationItem) {
+        activePaginationItem.classList.remove("active");
+      }
+      paginationItem.classList.add("active");
+    });
+  }
+
+  // Set the first pagination item as active by default
+  paginationElement.querySelector(".page-item").classList.add("active");
+} */
 
 
 
@@ -700,7 +820,7 @@ if (sighashContainer) { // Check if the sighashContainer parameter is defined
 
 
 
-function createSighashPreimageJSON(
+/* function createSighashPreimageJSON(
   nVersion, hashPrevouts, hashSequence, outpoint, scriptCode, value, nSequence,
   hashOutputs, nLockTime, nHashType
 ) {
@@ -739,7 +859,7 @@ function createSighashPreimageJSON(
   });
 
   return jsonContainer;
-}
+} */
 
 
 
@@ -1072,7 +1192,7 @@ document.getElementById("switchEndianButton").addEventListener("click", function
 });
 
 
-function createPaginatedSighashPreimageJSON(inputIndex, preimageObj) {
+/* function createPaginatedSighashPreimageJSON(inputIndex, preimageObj) {
   const container = document.createElement("div");
   container.classList.add("sighashPreimageJSON", "mb-3");
 
@@ -1109,7 +1229,7 @@ function updateSighashContainer(newRow, preimageJSON) {
   }
 
   sighashContainer.appendChild(preimageJSON.cloneNode(true));
-}
+} */
 
 
 /* async function createSighash() {
