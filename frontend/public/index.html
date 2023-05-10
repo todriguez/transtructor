@@ -66,8 +66,27 @@
                             <div class="mb-3">
                                 <label for="inputTXID-0" class="form-label">TXID:</label>
                                 <input type="text" class="form-control" name="inputTXID" id="inputTXID-0">
-                                <p>Enter the TXID that contains the outputs you want to spend. This will be a 32 byte Little Endian value.</p>
-                            </div>
+                                <p>Enter the TXID that contains the outputs you want to spend. The STO table displays a Big Endian TXID, but this form field expects a 32 byte Little Endian value.</p>
+                              
+                                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#toolsAndTips">
+                                  Tools & Tips
+                                </button>
+                              
+                                <div class="collapse" id="toolsAndTips">
+                                  <div class="card card-body">
+                                    <div class="mb-3">
+                                      <label for="switchEndian" class="form-label">Switch Endianness:</label>
+                                      <input type="text" class="form-control" id="switchEndian">
+                                      <button id="switchEndianButton" class="btn btn-primary mt-2" type="button">Convert</button>
+                                      <p id="switchEndianResult"></p>
+                                    </div>
+                                    <p>
+                                      The TXID is in big endian format in the spendable transaction outputs table and needs to be converted to little endian for inputting in the form. Use the above tool to convert the endianness of the TXID.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              
                             <div class="mb-3">
                                 <label for="inputVOUT-0" class="form-label">VOUT:</label>
                                 <input type="text" class="form-control" name="inputVOUT" id="inputVOUT-0">
