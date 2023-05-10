@@ -58,6 +58,32 @@ document.addEventListener("DOMContentLoaded", () => {
     displaySighashes(sighashes);
   });
 
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  });
+  
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Tab") {
+      event.preventDefault();
+      var nextField = event.target.nextElementSibling;
+      if (nextField) {
+        nextField.focus();
+      }
+    }
+  });
+
+  document.addEventListener("paste", function(event) {
+    var clipboardData = event.clipboardData.getData("text/plain");
+    if (clipboardData.indexOf(" ") !== -1) {
+      clipboardData = clipboardData.replace(/\s/g, "");
+      event.clipboardData.setData("text/plain", clipboardData);
+    }
+  });
+  
+  
+
   document.getElementById("inputCount").addEventListener("change", (event) => {
     createInputContainers(event);
   });
