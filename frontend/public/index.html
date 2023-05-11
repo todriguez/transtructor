@@ -339,21 +339,56 @@
                         <ul id="preimageJSONPagination" class="pagination"></ul>
                       </nav>
                 </div>
-                    <button id="createSighashButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Create Sighash</button>
-                    <p>Now when we press the button, the PreImage will be double hashed with SHA256 to create the SigHash </p>
+                <button id="generateSighashButton" type="button" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Hash Preimages</button>
+                <p>Now when we press the button, the PreImage will be double hashed with SHA256 to create the SigHash </p>
+                </div>
+                                <!-- New SIGHASH table -->
+                <div id="sighashTableContainer" class="mt-4">
+                    <table id="sighashTable">
+                    <thead>
+                        <tr>
+                        <th>Input #</th>
+                        <th>SIGHASH</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sighashTableBody"></tbody>
+                    </table>
+                </div>
                 </div>
       
                   
             </div>
-                <div>
-                    <h2>Signature</h2>
-                    <button id="signSigHash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SigHash</button>
-                    <p>Now when we press the button, we will sign the SigHash with the private key that solves the lockScript for the inputs we are spending and the signature will be presented in the table below. </p>
-                    <div id="Signature" class="mt-4">
-                        <label for="signature" class="form-label">Signature:</label>
-                        <pre id="signature" class="border p-2"></pre>
-                    </div>
+            <div>
+                <h2>Signature</h2>
+                <div id="unsignedSighashTableContainer" class="mt-4">
+                  <table id="unsignedSighashTable">
+                    <thead>
+                      <tr>
+                        <th>Input #</th>
+                        <th>Unsigned SIGHASH</th>
+                      </tr>
+                    </thead>
+                    <tbody id="unsignedSighashTableBody"></tbody>
+                  </table>
                 </div>
+                <form id="privateKeysForm" class="mt-4">
+                    <!-- The private keys input fields will be added here dynamically -->
+                  </form>
+                <button id="signSighash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SIGHASH</button>
+                <p>Now when we press the button, we will sign the SIGHASH with the private key that solves the lockScript for the inputs we are spending and the signature will be presented in the table below. </p>
+                <div id="signatureTableContainer" class="mt-4">
+                    <table id="signatureTable">
+                      <thead>
+                        <tr>
+                          <th>Input #</th>
+                          <th>Signature</th>
+                        </tr>
+                      </thead>
+                      <tbody id="signatureTableBody"></tbody>
+                    </table>
+                  </div>
+              </div>
+              
                 <div>
                     <h2>unlockScript</h2>
                     <button id="generateunlockScript" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Generate unlockScript</button>

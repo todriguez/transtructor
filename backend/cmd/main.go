@@ -19,6 +19,15 @@ import (
 	"github.com/rs/cors"
 )
 
+type SignRequest struct {
+	UnsignedSighashes []string `json:"unsignedSighashes"`
+	PrivateKeys       []string `json:"privateKeys"`
+}
+
+type SignResponse struct {
+	Signatures []string `json:"signatures"`
+}
+
 type RPCRequest struct {
 	ID      int64         `json:"id"`
 	Method  string        `json:"method"`
@@ -513,6 +522,85 @@ func doubleSha256Handler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func signSighashesHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Decode the JSON request
+	var signReq SignRequest
+	err = json.Unmarshal(body, &signReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Sign the SIGHASHes with the provided private keys
+	signatures, err := signSighashes(signReq.UnsignedSighashes, signReq.PrivateKeys)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create the response object
+	signResp := SignResponse{
+		Signatures: signatures,
+	}
+
+	// Encode the response as JSON
+	respBytes, err := json.Marshal(signResp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the response header and write the response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(respBytes)
+}
+
+func signSighashes(unsignedSighashes, privateKeys []string) ([]string, error) {
+	signatures := make([]string, len(unsignedSighashes))
+
+	// Iterate through the unsignedSighashes and privateKeys arrays
+	for i := 0; i < len(unsignedSighashes); i++ {
+		// Decode the private key from its WIF representation
+		wif, err := btcutil.DecodeWIF(privateKeys[i])
+		if err != nil {
+			return nil, fmt.Errorf("error decoding WIF for private key %d: %v", i, err)
+		}
+
+		// Ensure the decoded private key is for the correct network (mainnet, testnet3, etc.)
+		if !wif.IsForNet(&chaincfg.MainNetParams) {
+			return nil, fmt.Errorf("private key %d is not for the main network", i)
+		}
+
+		// Parse the SIGHASH from its hex representation
+		sighashBytes, err := hex.DecodeString(unsignedSighashes[i])
+		if err != nil {
+			return nil, fmt.Errorf("error decoding SIGHASH %d: %v", i, err)
+		}
+
+		// Sign the SIGHASH using the private key
+		signature, err := wif.PrivKey.Sign(sighashBytes)
+		if err != nil {
+			return nil, fmt.Errorf("error signing SIGHASH %d: %v", i, err)
+		}
+
+		// Convert the signature to DER format and encode it as a hex string
+		signatureDER := signature.Serialize()
+		signatureHex := hex.EncodeToString(signatureDER)
+
+		signatures[i] = signatureHex
+	}
+
+	return signatures, nil
+}
+
 func main() {
 	// Set up CORS
 	c := cors.New(cors.Options{
@@ -528,6 +616,7 @@ func main() {
 	http.Handle("/api/transaction-details", c.Handler(http.HandlerFunc(handleTransactionDetails)))
 	http.Handle("/api/proxy-transaction-details", c.Handler(http.HandlerFunc(proxyTransactionDetails)))
 	http.Handle("/api/double-sha256", c.Handler(http.HandlerFunc(doubleSha256Handler)))
+	http.Handle("/api/sign-sighashes", c.Handler(http.HandlerFunc(signSighashesHandler)))
 
 	port := "8090"
 	log.Println("Server running on port", port)
