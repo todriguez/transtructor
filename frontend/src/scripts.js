@@ -44,10 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
     attachPreimageEventListeners();
   });
   
-
-/*   document.querySelector('#generatekeypair').addEventListener('click', generateKeyPair);
-  document.querySelector('#mineBlocks').addEventListener('click', mineBlocks); */
-
   document.getElementById('generateSighashButton').addEventListener('click', async () => {
     // Call the displayPreimages function
     displayPreimages();
@@ -68,9 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     displaySighashes(sighashes);
     displayUnsignedSighashes(sighashes);
-    displayPrivateKeyInputs(preimages.length);
   });
-  
   
 
   document.addEventListener("keydown", function(event) {
@@ -116,9 +110,10 @@ window.addEventListener("load", () => {
   });
   
   document.getElementById('signSighash').addEventListener('click', async () => {
-    // ...
+    const unsignedSighashes = getSighashesFromTable(); // Assuming you have this function
+    const privateKeys = getPrivateKeysFromTable(); // You need to implement this
   
-    const response = await fetch('/api/sign-sighashes', {
+    const response = await fetch('http://203.18.30.236:8090/api/sign-sighashes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -137,6 +132,7 @@ window.addEventListener("load", () => {
       console.error('Error signing SIGHASHes:', response.statusText);
     }
   });
+  
   
 
 async function generateKeyPair(event) {
@@ -545,8 +541,6 @@ async function processTransactionData() {
 
   // Call the backend service to process the transaction data
 
-  // Display the private key inputs
-  displayPrivateKeyInputs(parseInt(inputCount));
 }
 
 
@@ -1005,29 +999,49 @@ function displayUnsignedSighashes(sighashes) {
     newRow.innerHTML = `
       <td>${i + 1}</td>
       <td>${sighashes[i]}</td>
+      <td><input type="text" id="privateKey${i + 1}" class="privateKey" placeholder="Enter private key"></td>
     `;
     unsignedSighashTableBody.appendChild(newRow);
   }
 }
 
+async function signSighashes(sighashes, privateKeys) {
+  const payload = {
+    UnsignedSighashes: sighashes,
+    PrivateKeys: privateKeys,
+  };
 
-function displayPrivateKeyInputs(numberOfInputs) {
-  const privateKeysForm = document.getElementById("privateKeysForm");
+  const response = await fetch("http://203.18.30.236:8090/api/sign-sighashes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-  // Clear the contents of the privateKeysForm
-  privateKeysForm.innerHTML = "";
-
-  for (let i = 0; i < numberOfInputs; i++) {
-    const newDiv = document.createElement("div");
-    newDiv.classList.add("mb-3");
-
-    newDiv.innerHTML = `
-      <label for="privateKey${i + 1}" class="form-label">Private Key for Input #${i + 1}:</label>
-      <input type="text" class="form-control" id="privateKey${i + 1}" placeholder="Enter the private key">
-    `;
-    privateKeysForm.appendChild(newDiv);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+
+  const data = await response.json();
+
+  return data.Signatures;
 }
+
+function getSighashesFromTable() {
+  const unsignedSighashTableBody = document.getElementById("unsignedSighashTableBody");
+  const sighashCells = unsignedSighashTableBody.querySelectorAll('tr > td:nth-child(2)');
+  return Array.from(sighashCells).map((cell) => cell.textContent);
+}
+
+function getPrivateKeysFromTable() {
+  const privateKeyInputs = document.querySelectorAll(".privateKey");
+  return Array.from(privateKeyInputs).map((input) => input.value);
+}
+
+
+
+
 
 function displaySignatures(signatures) {
   const signatureTableBody = document.getElementById("signatureTableBody");

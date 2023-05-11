@@ -542,6 +542,7 @@ func signSighashesHandler(w http.ResponseWriter, r *http.Request) {
 	// Sign the SIGHASHes with the provided private keys
 	signatures, err := signSighashes(signReq.UnsignedSighashes, signReq.PrivateKeys)
 	if err != nil {
+		log.Println(err) // Add this line
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -554,6 +555,7 @@ func signSighashesHandler(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON
 	respBytes, err := json.Marshal(signResp)
 	if err != nil {
+		log.Println(err) // Add this line
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -575,8 +577,8 @@ func signSighashes(unsignedSighashes, privateKeys []string) ([]string, error) {
 		}
 
 		// Ensure the decoded private key is for the correct network (mainnet, testnet3, etc.)
-		if !wif.IsForNet(&chaincfg.MainNetParams) {
-			return nil, fmt.Errorf("private key %d is not for the main network", i)
+		if !wif.IsForNet(&chaincfg.RegressionNetParams) {
+			return nil, fmt.Errorf("private key %d is not for the regtest network", i)
 		}
 
 		// Parse the SIGHASH from its hex representation
