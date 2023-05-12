@@ -1060,7 +1060,7 @@ function displaySignatures(signatures) {
   }
 }
 
-//  Style conversion tools container //
+/* //  Style conversion tools container //
 document.addEventListener('DOMContentLoaded', function() {
   var conversionToolsButton = document.querySelector('#conversionToolsContent button[data-bs-toggle="collapse"]');
   
@@ -1072,6 +1072,6 @@ document.addEventListener('DOMContentLoaded', function() {
   conversionToolsButton.addEventListener('click', function() {
     this.classList.toggle('collapsed');
   });
-});
+}); */
 
 
