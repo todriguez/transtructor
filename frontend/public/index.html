@@ -262,24 +262,83 @@
                 <h3>Output #<span class="outputIndex"></span></h3>
             </button>
                 <div class="collapse show outputContent">
-                    <div class="mb-3">
-                        <label for="outputValue-0" class="form-label">Value:</label>
-                        <input type="text" class="form-control" name="outputValue" id="outputValue-0">
-                        <p>"Value" is an 8 byte Little Endian value designating the value in satoshis for the transaction output. This will need to be less than the value of the inputs, with an appropriate difference that will be collected by the mining node. The RegTest Node has a minminingtxfee=0.00000050 or 50 sats.</p>
+                  <div class="mb-3">
+                    <label for="outputValue-0" class="form-label">Value:</label>
+                    <input type="text" class="form-control" id="outputValue-0" name="outputValue">
+                    <a class="output-value-info" data-bs-toggle="collapse" href="#outputValueInfoContent" aria-expanded="false" aria-controls="outputValueInfoContent">Value Info</a>
+                    <div class="collapse" id="outputValueInfoContent">
+                      <p>Welcome to the 'Value' field, where you'll define the number of satoshis for the transaction output. This field expects an 8 byte Little Endian hexadecimal value.</p>
+                      <p>As a good practice, ensure the total output value is less than the total input value, leaving room for the transaction fee. This fee is a token of appreciation to the mining node that confirms your transaction. On the RegTest Node, the minimum tip is a modest 50 satoshis, or 0.00000050 BSV.</p>
+                      <p>Use the conversion tools beneath the Spendable Transaction Output Table to easily change the decimal to hex, and remember to pad the hex bytes of the satoshis with the right number of zeros before you switch the endianness. </p>
                     </div>
-                    <div class="mb-3">
-                        <label for="outputlockScriptSize-0" class="form-label">lockScript Size:</label>
-                        <input type="text" class="form-control" name="ouputlockScriptSize" id="outputlockScriptSize-0">
-                        <p>This is the length of the script that the payee choses to encumber the satoshis of the output behind.</p>
+                  </div>
+                  <div class="mb-3">
+                    <label for="outputLockScriptSize-0" class="form-label">LockScript Size:</label>
+                    <input type="text" class="form-control" name="outputLockScriptSize" id="outputLockScriptSize-0">
+                    <a class="output-lock-script-size-info" data-bs-toggle="collapse" href="#outputLockScriptSizeInfoContent" aria-expanded="false" aria-controls="outputLockScriptSizeInfoContent">LockScript Size Info</a>
+                    <div class="collapse" id="outputLockScriptSizeInfoContent">
+                      <p>The 'LockScript Size' field refers to the length of the lockScript, expressed as a varInt, that the payee has chosen to encumber the satoshis of the output behind. As such, it represents the complexity of the conditions that must be met to spend the output.</p>
                     </div>
-                    <div class="mb-3">
-                        <label for="outputlockScript-0" class="form-label">lockScript:</label>
-                        <input type="text" class="form-control" name="outputlockScript" id="outputlockScript-0">
-                        <p>This is the script that needs to be solved to onspend the satoshis of the output.</p>
-                        <p>This is where the real magic of bitcoin happens, as this script can require the provision of any calculable number in Bitcoin's native language, Script.</p>
-                        <p>Bitcoin Script consists of 186 opcodes which can be used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation. </p>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="outputLockScript-0" class="form-label">lockScript:</label>
+                    <input type="text" class="form-control" name="outputLockScript" id="outputLockScript-0">
+                    <a class="output-lock-script-info" data-bs-toggle="collapse" href="#outputLockScriptInfoContent" aria-expanded="false" aria-controls="outputLockScriptInfoContent">LockScript Info</a>
+                    <div class="collapse" id="outputLockScriptInfoContent">
+                        <p>The 'LockScript' field is the core of a transaction's conditions. It's written in Bitcoin's native language, Script, which can provide any calculable number, making the possibilities vast. Let's explore some standard transaction types:</p>
+                
+                        <h4>1. Pay to Public Key (P2PK)</h4>
+                        <p>One of the simplest scripts, P2PK uses the security of Elliptic curve signatures to lock transaction outputs. Here's how it's defined and solved:</p>
+                        <code>
+                            P2PK Script: &lt;public_key&gt; OP_CHECKSIG<br>
+                            Solution: &lt;signature&gt;
+                        </code>
+                
+                        <h4>2. Pay to Hash Puzzle</h4>
+                        <p>This script uses a hash function as the checking function, requiring the spending party to provide a valid solution to the puzzle. Here are some examples:</p>
+                        <code>
+                            Example 1: OP_SHA256 &lt;sha256_hash&gt; OP_EQUAL<br>
+                            Example 2: OP_HASH256 &lt;double_sha256_hash&gt; OP_EQUAL<br>
+                            Example 3: OP_SHA256 OP_RIPEMD160 &lt;ripemd160_hash&gt; OP_EQUAL<br>
+                            Solution for Example 3: &lt;pre-hash_value&gt;
+                        </code>
+                
+                        <h4>3. Pay to Public Key Hash (P2PKH)</h4>
+                        <p>The most widely used locking script, P2PKH combines the security of elliptic curve signatures with a hash function. Here's how it's defined and solved:</p>
+                        <code>
+                            P2PKH Script: OP_DUP OP_HASH160 &lt;public_key_hash&gt; OP_EQUALVERIFY OP_CHECKSIG<br>
+                            Solution: &lt;signature&gt; &lt;public_key&gt;
+                        </code>
+                
+                        <h4>4. Pay to MultiSig (P2MS)</h4>
+                        <p>P2MS uses the OP_CHECKMULTISIG opcode to check against multiple signatures and public keys. Here's how a 2of3 multisig script is defined and some possible solutions:</p>
+                        <code>
+                            2of3 P2MS Script: 2 &lt;pubkey_1&gt; &lt;pubkey_2&gt; &lt;pubkey_3&gt; 3 OP_CHECKMULTISIG<br>
+                            Example Solutions:<br>
+                            1. 1 &lt;signature_1&gt; &lt;signature_2&gt;<br>
+                            2. 1 &lt;signature_1&gt; &lt;signature_3&gt;<br>
+                            3. 1 &lt;signature_2&gt; &lt;signature_3&gt;
+                        </code>
+                
+                        <h4>5. R-Puzzles</h4>
+                        <p>R-Puzzles allow parties to provide the ephemeral keys to third parties to access specific outputs on the blockchain so that valid signatures can be created. Here's how an R-Puzzle script is defined:</p>
+                        <code>
+                            R-Puzzle Script: OP_3 OP_SPLIT OP_NIP OP_1 OP_SPLIT OP_SWAP OP_SPLIT OP_DROP &lt;r-value&gt; OP_EQUAL
+                        </code>
+                        
+                        <h4>6. Pay to R-Puzzle Hash (P2RPH)</h4>
+                        <p>This script includes a signature evaluation and a hash function. Here's how a P2RPH script is defined and solved:</p>
+                        <code>
+                            P2RPH Script: OP_OVER OP_3 OP_SPLIT OP_NIP OP_1 OP_SPLIT OP_SWAP OP_SPLIT OP_DROP OP_HASH160 &lt;r_hash&gt; OP_EQUALVERIFY OP_CHECKSIG<br>
+                            Solution: &lt;signature&gt; &lt;public_key&gt;
+                        </code>
+                        
+                        <p>Remember, the above examples are just the tip of the iceberg. Bitcoin's Script language consists of 186 opcodes used for flow control, arithmetic, cryptography, bitwise logic, and data manipulation, providing immense flexibility in scripting transactions.</p>
                     </div>
-                </div>
+                  </div>
+                        
+                  
         </div>
     </template>
 
@@ -365,8 +424,8 @@
                     <label for="hashPrevouts">hashPrevouts (32-byte hash of all input outpoints)</label>
                     <input type="text" class="form-control hashPrevouts">
                 </div>
-                <
-                div class="form-group">
+                
+                <div class="form-group">
                     <label for="Sequence">Sequence (transaction input sequence numbers)</label>
                     <input type="text" class="form-control Sequence">
                 </div>
@@ -377,8 +436,8 @@
                     <label for="hashSequence">hashSequence (32-byte hash of all input sequence numbers)</label>
                     <input type="text" class="form-control hashSequence">
                 </div>
-                <
-                div class="form-group">
+                
+                <div class="form-group">
                     <label for="outpoint">outpoint (36-byte outpoint of the input being signed)</label>
                     <input type="text" class="form-control outpoint">
                 </div>

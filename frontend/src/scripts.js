@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("processTransactionDataButton").addEventListener("click", () => {
+    console.log('Process Transaction Data button clicked');  // Add this line
     const inputCount = parseInt(document.querySelector("#inputCount").value);
     const transaction = createTransactionFromForm();
     displayTransactionJSON(transaction);
@@ -422,14 +423,16 @@ function getInputs() {
 }
 
 function getOutputs() {
+  console.log(document.querySelectorAll("[id^='outputValue-']").length);
+
   const outputCount = parseInt(document.getElementById("outputCount").value, 16);
   const outputs = [];
 
   for (let i = 0; i < outputCount; i++) {
     const value = document.getElementById(`outputValue-${i}`).value; // Remove parseInt conversion
-    const lockScript = document.getElementById(`outputlockScript-${i}`).value;
+    const lockScript = document.getElementById(`outputLockScript-${i}`).value;  // Change outputlockScript to outputLockScript
 
-    const lockScriptSize = lockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
+const lockScriptSize = document.getElementById(`outputLockScriptSize-${i}`).value;  // Change outputlockScriptSize to outputLockScriptSize
 
     outputs.push({ value, lockScript, lockScriptSize });
   }
@@ -484,6 +487,8 @@ function updateInputOrOutputContainers(containerType) {
       newContainer.querySelectorAll("input, select").forEach((element) => {
         const name = element.getAttribute("name");
         element.id = `${name}-${i}`;
+        console.log(`Created element id: ${element.id}`);  // Add this line
+
       });
 
       // Append the new container as a child of the parent div
