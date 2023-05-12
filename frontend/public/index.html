@@ -34,9 +34,18 @@
                     <tbody id="keypairTableBody"></tbody>
                 </table>
             </div>
-            <label for="keyPairSelector" class="form-label">Select key pair index:</label>
-                <select class="form-select" id="keyPairSelector" name="keyPairSelector">
-                </select>
+            <div class="mb-3">
+                <label for="keyPairSelector" class="form-label">Select key pair index:</label>
+                <select class="form-select" id="keyPairSelector" name="keyPairSelector"></select>
+                <a class="key-pair-info" data-bs-toggle="collapse" href="#keyPairInfoContent" aria-expanded="false" aria-controls="keyPairInfoContent">Key Pair Info</a>
+                <div class="collapse" id="keyPairInfoContent">
+                  <p>From the keys generated above, select a key pair to mine blocks with.</p>
+                  <p>The key pair will be used to mine 110 blocks on a Bitcoin RegTest Network. Each mined block's coinbase transaction requires these keys to spend its outputs.</p>
+                  <p>The reason we mine 110 blocks is that coinbase transactions are only spendable after they have satisfied the coinbase block maturity rule of being over 100 blocks deep in the chain.</p>
+                  <p><strong>Please note:</strong> It may take up to 10 seconds for the mined blocks to be returned to populate the table.</p>
+                </div>
+              </div>
+              
                         <button id="mineBlocks" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Mine Blocks</button>
                         <div id="spendableTransactionOutputs" class="mt-4">
                         <h2 style="text-align: center;">Spendable Transaction Outputs</h2>
@@ -83,14 +92,61 @@
                         </button>
                         <div id="transactionContent" class="collapse show">
                             <form id="transactionForm">
-                        <div class="mb-3">
-                          <label for="Version" class="form-label">Version:</label>
-                          <input type="text" class="form-control" id="version" name="Version">
-                        </div>
-                <div class="mb-3">
-                    <label for="inputCount" class="form-label">Input Count:</label>
-                    <input type="text" class="form-control" id="inputCount" name="inputCount">
-                </div>
+                                <div class="mb-3">
+                                    <label for="Version" class="form-label">Version:</label>
+                                    <input type="text" class="form-control" id="version" name="Version">
+                                    <a class="version-info" data-bs-toggle="collapse" href="#versionInfoContent" aria-expanded="false" aria-controls="versionInfoContent">Version Info</a>
+                                    <div class="collapse" id="versionInfoContent">
+                                      <p>The "Version" is the first data field of a transaction. It expects a 4-byte hexadecimal value in Little Endian notation.</p>
+                                      <p>For example, Version 1 would be represented as 01000000.</p>
+                                      <p>Bitcoin transaction version numbers are used to signal to the network what type of transaction it is and what rules it follows. This provides an efficient way for miners to know how to handle that particular type of transaction.</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div class="mb-3">
+                                    <label for="inputCount" class="form-label">Input Count:</label>
+                                    <input type="text" class="form-control" id="inputCount" name="inputCount">
+                                    <a class="input-count-info" data-bs-toggle="collapse" href="#inputCountInfoContent" aria-expanded="false" aria-controls="inputCountInfoContent">Input Count Info</a>
+                                    <div class="collapse" id="inputCountInfoContent">
+                                      <p>Input Count is a varInt which specifies the number of Spendable Transaction Outputs that will be committed to the transaction. This will be either a 1, 3, 5, or 9-byte value.</p>
+                                      <p>The forms for each input will be dynamically created when a value is entered in the field above. This tool only allows for a maximum of 5 inputs. </p>
+                                      <p>The following table explains how to specify a number as a VarInt in Bitcoin:</p>
+                                      <div>
+                                        <table class="table mt-2 border border-dark">
+                                          <thead>
+                                            <tr>
+                                              <th>Size</th>
+                                              <th>Example</th>
+                                              <th>Description</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td>&lt;= 0xfc</td>
+                                              <td>12</td>
+                                              <td></td>
+                                            </tr>
+                                            <tr>
+                                              <td>&lt;= 0xffff</td>
+                                              <td>fd1234</td>
+                                              <td>Prefix with fd, and the next 2 bytes are the VarInt (in little-endian).</td>
+                                            </tr>
+                                            <tr>
+                                              <td>&lt;= 0xffffffff</td>
+                                              <td>fe12345678</td>
+                                              <td>Prefix with fe, and the next 4 bytes are the VarInt (in little-endian).</td>
+                                            </tr>
+                                            <tr>
+                                              <td>&lt;= 0xffffffffffffffff</td>
+                                              <td>ff1234567890abcdef</td>
+                                              <td>Prefix with ff, and the next 8 bytes are the VarInt (in little-endian).</td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
 
                 <template id="inputContainerTemplate">
                     <div class="inputContainer mt-4">
@@ -372,9 +428,6 @@
                       <tbody id="unsignedSighashTableBody"></tbody>
                     </table>
                   </div>
-                  
-                <form id="privateKeysForm" class="mt-4">
-                    <!-- The private keys input fields will be added here dynamically -->
                   </form>
                 <button id="signSighash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SIGHASH</button>
                 <p>Now when we press the button, we will sign the SIGHASH with the private key that solves the lockScript for the inputs we are spending and the signature will be presented in the table below. </p>

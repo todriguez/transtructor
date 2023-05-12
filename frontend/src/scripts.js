@@ -1060,3 +1060,18 @@ function displaySignatures(signatures) {
   }
 }
 
+//  Style conversion tools container //
+document.addEventListener('DOMContentLoaded', function() {
+  var conversionToolsButton = document.querySelector('#conversionToolsContent button[data-bs-toggle="collapse"]');
+  
+  // Check if the button's container is initially collapsed
+  if (!conversionToolsButton.classList.contains('collapsed')) {
+    conversionToolsButton.classList.add('collapsed');
+  }
+  
+  conversionToolsButton.addEventListener('click', function() {
+    this.classList.toggle('collapsed');
+  });
+});
+
+
