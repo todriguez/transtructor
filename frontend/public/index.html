@@ -352,12 +352,16 @@
     </div>
                 
     <div class="mb-3">
-        <label for="nLockTime" class="form-label">nLockTime:</label>
-        <input type="text" class="form-control" id="nLockTime" name="nLockTime">
-        <p>nLockTime is a 4 byte Little Endian value.</p>
-        <p>If the value of the transaction’s nLockTime field is less than 500,000,000 then the field represents a block height.</p>
-        <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
-    </div>  
+      <label for="nLockTime" class="form-label">nLockTime:</label>
+      <input type="text" class="form-control" id="nLockTime" name="nLockTime">
+      <a class="nLockTime-info" data-bs-toggle="collapse" href="#nLockTimeInfoContent" aria-expanded="false" aria-controls="nLockTimeInfoContent">nLockTime Info</a>
+      <div class="collapse" id="nLockTimeInfoContent">
+          <p>nLockTime is a 4 byte Little Endian value.</p>
+          <p>If the value of the transaction’s nLockTime field is less than 500,000,000 then the field represents a block height.</p>
+          <p>If the value of the transaction’s nLockTime field is greater or equal to 500,000,000 then the field represents a UNIX epoch timestamp.</p>
+      </div>
+  </div>
+    
                 
     <div><button type="button" id="processTransactionDataButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Process Transaction Data</button></div>
 
@@ -370,7 +374,171 @@
       <h2>Preimages</h2>
         <div id="transactionJSONContainer" class="mt-4"></div>
           <p>Fill in the fields below with the appropriate values extracted from the JSON displayed above. Some values will need to be gathered from the Spendable Transaction Output table as well.  Once you have populated the table, click the button at the bottom of each preimage form for its SIGHASH preimage to be displayed in the table below. </p>
-        <div class="card mt-4">
+          <div class="d-flex justify-content-center">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                SIGHASH Help
+            </button>
+        </div>
+        
+        <div class="collapse" id="collapseExample">
+          <div class="tableContainer">
+            <table class="fieldTable">
+              <thead>
+                <tr>
+                  <th rowspan="2">Field</th>
+                  <th rowspan="2">Description</th>
+                  <th rowspan="2">Byte Length</th>
+                  <th rowspan="2">Endianness</th>
+                  <th colspan="3">Standard</th>
+                  <th colspan="3">ANYONECANPAY</th>
+                </tr>
+                <tr>
+                  <th>SIGHASH_ALL</th>
+                  <th>SIGHASH_NONE</th>
+                  <th>SIGHASH_SINGLE</th>
+                  <th>SIGHASH_ALL</th>
+                  <th>SIGHASH_NONE</th>
+                  <th>SIGHASH_SINGLE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>nVersion</td>
+                  <td>The version number of the transaction.</td>
+                  <td>4</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>hashPrevouts</td>
+                  <td>The double SHA256 of the serialization of all input outpoints.</td>
+                  <td>32</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>32 bytes of zeros</td>
+                  <td>32 bytes of zeros</td>
+                  <td>32 bytes of zeros</td>
+                </tr>
+                <tr>
+                  <td>hashSequence</td>
+                  <td>The double SHA256 of the serialization of nSequence of all inputs.</td>
+                  <td>32</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>32 bytes of zeros</td>
+                  <td>32 bytes of zeros</td>
+                  <td>32 bytes of zeros</td>
+                </tr>
+                <tr>
+                  <td>outpoint</td>
+                  <td>The previous output transaction reference, as an OutPoint structure.</td>
+                  <td>36</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>lockScriptSize</td>
+                  <td>Size of the lock script.</td>
+                  <td>VarInt</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>lockScript</td>
+                  <td>The script that controls how the next person wanting to spend these Bitcoins can gain access to them.</td>
+                  <td>Variable</td>
+                  <td>N/A</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>value</td>
+                  <td>The amount in Satoshis being spent from the outpoint to this input.</td>
+                  <td>8</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>nSequence</td>
+                  <td>The sequence number of this input.</td>
+                  <td>4</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>hashOutputs</td>
+                  <td>The double SHA256 of the serialization of all output amounts and scripts.</td>
+                  <td>32</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td>32 bytes of zeros</td>
+                  <td>If signing input index > #outputs, set to 32-byte zero	</td>
+                  <td></td>
+                  <td>32 bytes of zeros</td>
+                  <td>If signing input index > #outputs, set to 32-byte zero	</td>
+                </tr>
+                <tr>
+                  <td>nLockTime</td>
+                  <td>The lock time indicating when this transaction can be added to the blockchain.</td>
+                  <td>4</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>sighash</td>
+                  <td>The type of signature hash being used.</td>
+                  <td>4</td>
+                  <td>Little</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+        </div>
+          <!-- <div class="card mt-4">
           <div class="card-header">
               <h3 class="mb-0">
                   <button class="btn btn-link custom-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sighashHelp" aria-expanded="false" aria-controls="sighashHelp">
@@ -396,7 +564,7 @@
                       </ul>
                   </p>
               </div>
-          </div>
+          </div> -->
         </div>
 
       <div id="preimagesContainer" class="row"></div>
@@ -410,57 +578,103 @@
           <div class="collapse preimageContent" id="preimageContent-">
 
             <form class="preimageForm">
-              <label for="nVersion">nVersion (4-byte transaction version number)</label>
-              <input type="text" class="form-control nVersion">
 
-                <div class="form-group">
-                    <label for="Prevouts">Prevouts (transaction input outpoints)</label>
-                    <input type="text" class="form-control Prevouts">
+              <div class="form-group">
+                <label for="nVersion" class="form-label">nVersion:</label>
+                <input type="text" class="form-control nVersion" id="nVersion" name="nVersion">
+                <a class="nVersion-info" data-bs-toggle="collapse" href="#nVersionInfoContent" aria-expanded="false" aria-controls="nVersionInfoContent">nVersion Info</a>
+                <div class="collapse" id="nVersionInfoContent">
+                    <p>nVersion is a 4-byte Little Endian transaction version number.</p>
+                    <p>It specifies the version of the transaction format and is included in the preimage to prevent version inconsistency, which could lead to transaction manipulation or incompatibility issues.</p>
                 </div>
-                
-                <button class="hashButton hashPrevoutsButton btn btn-primary mb-3" type="button">Hash Data</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="Prevouts" class="form-label">Prevouts:</label>
+                <input type="text" class="form-control Prevouts" id="Prevouts" name="Prevouts">
+                <a class="Prevouts-info" data-bs-toggle="collapse" href="#PrevoutsInfoContent" aria-expanded="false" aria-controls="PrevoutsInfoContent">Prevouts Info</a>
+                <div class="collapse" id="PrevoutsInfoContent">
+                    <p>Prevouts are transaction input outpoints.</p>
+                    <p>They consist of a 32-byte TXID and a 4-byte VOUT, pointing to a specific output of a previous transaction being spent. Prevouts are serialized in little endian format and concatenated together for all inputs in the transaction. Including them in the preimage ensures the exact inputs being spent are locked, preventing any changes after the signature is generated.</p>
+                </div>
+            </div>
+            
+            <button class="hashButton hashPrevoutsButton btn btn-primary mb-3" type="button">Hash Data</button>
+            
+            <div class="form-group">
+                <label for="hashPrevouts">hashPrevouts (32-byte hash of all input outpoints)</label>
+                <input type="text" class="form-control hashPrevouts">
+            </div>
+            
+            <div class="form-group">
+                <label for="Sequence" class="form-label">Sequence:</label>
+                <input type="text" class="form-control Sequence" id="Sequence" name="Sequence">
+                <a class="Sequence-info" data-bs-toggle="collapse" href="#SequenceInfoContent" aria-expanded="false" aria-controls="SequenceInfoContent">Sequence Info</a>
+                <div class="collapse" id="SequenceInfoContent">
+                    <p>Sequence represents the transaction input sequence numbers.</p>
+                    <p>It is a 4-byte field used for enabling relative locktimes for individual inputs within a transaction. If not used for relative locktime, the sequence number is typically set to 0xFFFFFFFF. The sequence numbers are serialized in little endian format and concatenated together for all inputs. Including the sequence field in the preimage ensures the integrity of the relative locktime feature, preventing any unauthorized changes to input locktimes after the signature is created.</p>
+                </div>
+            </div>
+            
+            <button class="hashButton hashSequenceButton btn btn-primary mb-3" type="button">Hash Data</button>
+            
+            <div class="form-group">
+                <label for="hashSequence">hashSequence (32-byte hash of all input sequence numbers)</label>
+                <input type="text" class="form-control hashSequence">
+            </div>
+            
                 
                 <div class="form-group">
-                    <label for="hashPrevouts">hashPrevouts (32-byte hash of all input outpoints)</label>
-                    <input type="text" class="form-control hashPrevouts">
+                  <label for="outpoint" class="form-label">outpoint:</label>
+                  <input type="text" class="form-control outpoint" id="outpoint" name="outpoint">
+                  <a class="outpoint-info" data-bs-toggle="collapse" href="#outpointInfoContent" aria-expanded="false" aria-controls="outpointInfoContent">Outpoint Info</a>
+                  <div class="collapse" id="outpointInfoContent">
+                      <p>Outpoint represents the 36-byte outpoint of the input being signed.</p>
+                      <p>This is included in the preimage to ensure that the signature commits to the exact input being spent, thus preventing transaction malleability.</p>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <label for="scriptCode" class="form-label">scriptCode:</label>
+                  <input type="text" class="form-control scriptCode" id="scriptCode" name="scriptCode">
+                  <a class="scriptCode-info" data-bs-toggle="collapse" href="#scriptCodeInfoContent" aria-expanded="false" aria-controls="scriptCodeInfoContent">ScriptCode Info</a>
+                  <div class="collapse" id="scriptCodeInfoContent">
+                      <p>ScriptCode represents the lockScript of the output being spent, prefixed by its length.</p>
+                      <p>This is included in the preimage to ensure that the signature is spending the correct UTXO (Unspent Transaction Output) with the specified script.</p>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <label for="value" class="form-label">value:</label>
+                  <input type="text" class="form-control value" id="value" name="value">
+                  <a class="value-info" data-bs-toggle="collapse" href="#valueInfoContent" aria-expanded="false" aria-controls="valueInfoContent">Value Info</a>
+                  <div class="collapse" id="valueInfoContent">
+                      <p>Value represents the 8-byte value of the output being spent, in little-endian format.</p>
+                      <p>This is included in the preimage to ensure the signature commits to the amount being spent, preventing any potential tampering of the amount after the signature is created.</p>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <label for="nSequence" class="form-label">nSequence:</label>
+                  <input type="text" class="form-control nSequence" id="nSequence" name="nSequence">
+                  <a class="nSequence-info" data-bs-toggle="collapse" href="#nSequenceInfoContent" aria-expanded="false" aria-controls="nSequenceInfoContent">nSequence Info</a>
+                  <div class="collapse" id="nSequenceInfoContent">
+                      <p>nSequence represents the 4-byte sequence number of the input being signed.</p>
+                      <p>This is included in the preimage to ensure that the signature commits to the input's sequence number, which can be used for various functions like enforcing relative locktime.</p>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="Outputs" class="form-label">Outputs:</label>
+                <input type="text" class="form-control Outputs" id="Outputs" name="Outputs">
+                <a class="Outputs-info" data-bs-toggle="collapse" href="#OutputsInfoContent" aria-expanded="false" aria-controls="OutputsInfoContent">Outputs Info</a>
+                <div class="collapse" id="OutputsInfoContent">
+                    <p>Outputs represent the transaction output values, lockScripts, and their corresponding sizes.</p>
+                    <p>Each output consists of a value (the number of satoshis to be spent), a lockScriptSize (the length of the lockScript), and a lockScript (the conditions needed to spend the output). They are included in the preimage to ensure the signature commits to the exact outputs of the transaction, including both the amount and the locking script. This prevents any potential changes to the outputs after the signature is created, thus securing the allocation of the transaction's funds.</p>
                 </div>
-                
-                <div class="form-group">
-                    <label for="Sequence">Sequence (transaction input sequence numbers)</label>
-                    <input type="text" class="form-control Sequence">
-                </div>
-                
-                <button class="hashButton hashSequenceButton btn btn-primary mb-3" type="button">Hash Data</button>
-                
-                <div class="form-group">
-                    <label for="hashSequence">hashSequence (32-byte hash of all input sequence numbers)</label>
-                    <input type="text" class="form-control hashSequence">
-                </div>
-                
-                <div class="form-group">
-                    <label for="outpoint">outpoint (36-byte outpoint of the input being signed)</label>
-                    <input type="text" class="form-control outpoint">
-                </div>
-                
-                <div class="form-group">
-                    <label for="scriptCode">scriptCode (output script being spent, prefixed by its length)</label>
-                    <input type="text" class="form-control scriptCode">
-                </div>
-                
-                <div class="form-group">
-                    <label for="value">value (8-byte value of the output being spent, in little-endian format)</label>
-                    <input type="text" class="form-control value">
-                </div>
-                
-                <div class="form-group">
-                    <label for="nSequence">nSequence (4-byte sequence number of the input being signed)</label>
-                    <input type="text" class="form-control nSequence">
-                </div>
-                
-                <div class="form-group">
-                    <label for="Outputs">Outputs (transaction output values and lockScripts)</label>
-                <input type="text" class="form-control Outputs">
-                </div>
+            </div>
+            
+            
                 
                 <button class="hashButton hashOutputsButton btn btn-primary mb-3" type="button">Hash Data</button>
                 
@@ -470,21 +684,37 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="nLockTime">nLockTime (4-byte transaction lock time)</label>
-                    <input type="text" class="form-control nLockTime">
-                </div>
-                
-                <div class="form-group">
-                    <label for="nHashType">nHashType (4-byte SIGHASH type, in little-endian format)</label>
-                    <input type="text" class="form-control nHashType">
-                </div>
-                
-                <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
-                
-                <div class="form-group">
-                    <label for="preimage">SIGHASH Preimage</label>
-                    <input type="text" class="form-control preimage" readonly>
-                </div>
+                  <label for="nLockTime" class="form-label">nLockTime:</label>
+                  <input type="text" class="form-control nLockTime" id="nLockTime" name="nLockTime">
+                  <a class="nLockTime-info" data-bs-toggle="collapse" href="#nLockTimeInfoContent" aria-expanded="false" aria-controls="nLockTimeInfoContent">nLockTime Info</a>
+                  <div class="collapse" id="nLockTimeInfoContent">
+                      <p>nLockTime is a 4-byte transaction lock time.</p>
+                      <p>It determines the earliest time or the earliest block a transaction can be added to the blockchain. Including this in the preimage ensures the specific timing restrictions of the transaction cannot be changed without invalidating the signature.</p>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <label for="nHashType" class="form-label">nHashType:</label>
+                  <input type="text" class="form-control nHashType" id="nHashType" name="nHashType">
+                  <a class="nHashType-info" data-bs-toggle="collapse" href="#nHashTypeInfoContent" aria-expanded="false" aria-controls="nHashTypeInfoContent">nHashType Info</a>
+                  <div class="collapse" id="nHashTypeInfoContent">
+                      <p>nHashType is a 4-byte SIGHASH type, in little-endian format.</p>
+                      <p>This field determines which parts of the transaction the signature commits to. Including this in the preimage ensures that the signer's intention regarding what should and shouldn't be signed is preserved, preventing any unauthorized alterations to the transaction after the signature is generated.</p>
+                  </div>
+              </div>
+              
+              <button class="generatePreimageButton btn btn-primary mb-3" type="button">Generate Preimage</button>
+              
+              <div class="form-group">
+                  <label for="preimage" class="form-label">SIGHASH Preimage:</label>
+                  <input type="text" class="form-control preimage" id="preimage" readonly>
+                  <a class="preimage-info" data-bs-toggle="collapse" href="#preimageInfoContent" aria-expanded="false" aria-controls="preimageInfoContent">Preimage Info</a>
+                  <div class="collapse" id="preimageInfoContent">
+                      <p>The SIGHASH Preimage is the dataset hashed to compute the signature for a Bitcoin transaction.</p>
+                      <p>The preimage is critical for transaction security because it prevents tampering. If any part of the transaction covered by the signature is changed (including the fields covered by nHashType), the preimage changes, which changes the hash of the preimage, invalidating the signature. Thus, the preimage is an essential tool for maintaining the integrity of transactions on the Bitcoin network.</p>
+                  </div>
+              </div>
+              
 
             </form>
           </div>
