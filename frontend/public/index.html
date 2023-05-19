@@ -791,15 +791,59 @@
         </div>
       </div>
       
-      <div>
-          <h2>unlockScript</h2>
-          <button id="generateunlockScript" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Generate unlockScript</button>
-          <p>Now when we press the button, we concatenate the signature of the transaction, and public key associated with the private key that signed the transaction.</p>
-          <div id="unlockScript" class="mt-4">
-              <label for="unlockScript" class="form-label">unlockScript:</label>
-              <pre id="unlockScript" class="border p-2"></pre>
-          </div>
+      <div id="unlockScriptContainer">
+        <h2>UnlockScripts</h2>
+        <!-- UnlockScript form sections will go here -->
       </div>
+      
+      <!-- This is a hidden template for the UnlockScript form sections -->
+<template id="unlockScriptFormTemplate">
+  <div class="unlockScriptWrapper">
+    <h3 class="unlockScriptIndex"></h3>
+
+    <label for="lockScriptType" class="form-label">LockScript Type:</label>
+    <select class="lockScriptType">
+      <option value="p2pkh">P2PKH</option>
+      <option value="custom">Custom</option>
+      <!-- Add other lockScript types here -->
+    </select>
+
+    <div class="p2pkhFields">
+      <label class="form-label">Signature:</label>
+      <input type="text" class="signature" name="signature">
+
+      <label class="form-label">SigHash Type:</label>
+      <select class="sigHashType">
+        <option value="41">ALL</option>
+        <option value="42">NONE</option>
+        <option value="43">SINGLE</option>
+        <option value="C1">ALL | ANYONECANPAY</option>
+        <option value="C2">NONE | ANYONECANPAY</option>
+        <option value="C3">SINGLE | ANYONECANPAY</option>
+      </select>
+
+      <label class="form-label">Public Key:</label>
+      <input type="text" class="publicKey" name="publicKey">
+    </div>
+
+    <div class="customFields" style="display: none;">
+      <label class="form-label">Custom UnlockScript:</label>
+      <textarea class="customUnlockScript"></textarea>
+    </div>
+
+    <button class="btn btn-primary mt-2 generateUnlockScriptButton">Generate UnlockScript</button>
+
+    <div class="unlockScriptOutput mt-4">
+      <label class="form-label">UnlockScript Size (bytes):</label>
+      <pre class="border p-2 unlockScriptSizePre"></pre>
+
+      <label class="form-label">UnlockScript:</label>
+      <pre class="border p-2 unlockScriptOutputPre"></pre>
+    </div>
+  </div>
+</template>
+
+      
         
       <div>
           <h2>Raw Transaction Data</h2>

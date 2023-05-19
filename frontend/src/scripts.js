@@ -41,6 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const transaction = createTransactionFromForm();
     displayTransactionJSON(transaction);
     generatePreimageTemplates(inputCount);
+    generateUnlockScriptTemplates(inputCount);  // add this line
+
     // Call attachPreimageEventListeners after generating the preimage templates
     attachPreimageEventListeners();
   });
@@ -1064,6 +1066,108 @@ function displaySignatures(signatures) {
     signatureTableBody.appendChild(newRow);
   }
 }
+
+function generateUnlockScriptTemplates(inputCount) {
+  const unlockScriptContainer = document.getElementById("unlockScriptContainer");
+  const unlockScriptFormTemplate = document.getElementById("unlockScriptFormTemplate");
+
+  // Remove any existing unlockScript forms
+while (unlockScriptContainer.firstChild) {
+  unlockScriptContainer.removeChild(unlockScriptContainer.firstChild);
+}
+
+
+  // Generate the new unlockScript forms
+for (let i = 0; i < inputCount; i++) {
+  const unlockScriptWrapper = unlockScriptFormTemplate.content.cloneNode(true);
+  const unlockScriptDiv = unlockScriptWrapper.querySelector(".unlockScriptWrapper");
+  unlockScriptDiv.id = `unlockScriptWrapper-${i}`;
+
+  unlockScriptWrapper.querySelector(".unlockScriptIndex").innerText = i + 1;
+
+  unlockScriptContainer.appendChild(unlockScriptWrapper);
+}
+
+
+  // Call attachUnlockScriptEventListeners after creating the new unlockScript forms
+  attachUnlockScriptEventListeners();
+}
+
+function attachUnlockScriptEventListeners() {
+  const unlockScriptWrappers = document.querySelectorAll('.unlockScriptWrapper');
+
+  unlockScriptWrappers.forEach((wrapper) => {
+    const lockScriptTypeSelect = wrapper.querySelector('.lockScriptType');
+    const p2pkhFields = wrapper.querySelector('.p2pkhFields');
+    const customFields = wrapper.querySelector('.customFields');
+    const generateUnlockScriptButton = wrapper.querySelector('.generateUnlockScriptButton');
+    const unlockScriptOutputPre = wrapper.querySelector('.unlockScriptOutputPre');
+    const unlockScriptSizePre = wrapper.querySelector('.unlockScriptSizePre');
+
+    // Attach change listener to the lockScriptType select field
+    lockScriptTypeSelect.addEventListener('change', (event) => {
+      if (event.target.value === 'p2pkh') {
+        p2pkhFields.style.display = 'block';
+        customFields.style.display = 'none';
+      } else if (event.target.value === 'custom') {
+        p2pkhFields.style.display = 'none';
+        customFields.style.display = 'block';
+      }
+    });
+
+    // Attach click listener to the generateUnlockScriptButton
+    generateUnlockScriptButton.addEventListener('click', () => {
+      // Perform the unlock script generation here
+
+      // Assuming generateUnlockScript is a function that takes the relevant inputs and
+      // returns the generated unlock script and its size
+      const { unlockScript, size } = generateUnlockScript(wrapper);
+      
+      unlockScriptOutputPre.textContent = unlockScript;
+      unlockScriptSizePre.textContent = size;
+    });
+  });
+}
+
+function generateUnlockScript(wrapperElement) {
+  const lockScriptTypeSelect = wrapperElement.querySelector(".lockScriptType");
+  const lockScriptType = lockScriptTypeSelect.value;
+
+  // Variables for the generated unlock script and size
+  let unlockScript = '';
+  let unlockScriptSize = 0;
+
+  if (lockScriptType === 'p2pkh') {
+    const signatureInput = wrapperElement.querySelector(".signature");
+    const sigHashTypeSelect = wrapperElement.querySelector(".sigHashType");
+    const publicKeyInput = wrapperElement.querySelector(".publicKey");
+
+    const signature = signatureInput.value;
+    const sigHashType = sigHashTypeSelect.value;
+    const publicKey = publicKeyInput.value;
+
+    // The P2PKH unlock script format is: [signature] [sigHashType] [publicKey]
+    unlockScript = `${signature} ${sigHashType} ${publicKey}`;
+    unlockScriptSize = unlockScript.length;  // This is an approximation. In a real scenario, you'd want to calculate the exact byte size
+  } else if (lockScriptType === 'custom') {
+    const customUnlockScriptTextarea = wrapperElement.querySelector(".customUnlockScript");
+
+    unlockScript = customUnlockScriptTextarea.value;
+    unlockScriptSize = unlockScript.length;  // Again, this is an approximation
+  }
+
+  // Set the generated unlock script and size in the output elements
+  const unlockScriptSizePre = wrapperElement.querySelector(".unlockScriptSizePre");
+  const unlockScriptOutputPre = wrapperElement.querySelector(".unlockScriptOutputPre");
+
+  unlockScriptSizePre.innerText = unlockScriptSize;
+  unlockScriptOutputPre.innerText = unlockScript;
+    return { unlockScript, size: unlockScriptSize };
+}
+
+
+
+
 
 /* //  Style conversion tools container //
 document.addEventListener('DOMContentLoaded', function() {
