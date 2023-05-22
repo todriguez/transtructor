@@ -1164,7 +1164,7 @@ function generateUnlockScript(wrapperElement) {
     unlockScript = customUnlockScriptTextarea.value;
   }
 
-  const unlockScriptSize = Math.ceil(unlockScript.length / 2);  // Since each byte is represented by 2 hexadecimal characters
+  const unlockScriptSize = (Math.ceil(unlockScript.length / 2)).toString(16);
   // Set the generated unlockScript and size in the output elements
   const unlockScriptSizePre = wrapperElement.querySelector(".unlockScriptSizePre");
   const unlockScriptOutputPre = wrapperElement.querySelector(".unlockScriptOutputPre");
@@ -1175,7 +1175,7 @@ function generateUnlockScript(wrapperElement) {
   return { unlockScript, size: unlockScriptSize };
 }
 
-function createInputForField(key, value) {
+function createInputForField(key, value, color) {
   const div = document.createElement("div");
 
   const label = document.createElement("label");
@@ -1185,16 +1185,18 @@ function createInputForField(key, value) {
   const input = document.createElement("input");
   input.type = "text";
   input.name = key;
-  
+  input.classList.add(color);
+
   // Set the value only if it's not unlockScriptSize or unlockScript
   if (!(key.endsWith("unlockScriptSize") || key.endsWith("unlockScript"))) {
     input.value = value;
   }
-  
+
   div.appendChild(input);
 
   return div;
 }
+
 
 
 
@@ -1207,51 +1209,206 @@ function displayEditableTransactionJSON(transaction) {
     transactionJSONContainer.removeChild(existingTransactionData);
   }
 
+  // Define color classes
+  const colors = ["color1", "color2", "color3", "color4", "color5", "color6", "color7", "color8", "color9", "color10", "color11", "color12", "color13"];
+
   // Create a form to display the editable transaction JSON data
   const transactionJSONForm = document.createElement("form");
+  
+  let colorIndex = 0;
   for (let key in transaction) {
-    if (key === "inputs" || key === "outputs") {
-      for (let i = 0; i < transaction[key].length; i++) {
-        const inputOutputGroup = document.createElement("div");
-        inputOutputGroup.classList.add("input-output-group");
-        for (let innerKey in transaction[key][i]) {
-          let field = createInputForField(`${key}[${i}].${innerKey}`, transaction[key][i][innerKey]);
-          if (field !== null) {
-            inputOutputGroup.appendChild(field);
-          }
-        }
-        transactionJSONForm.appendChild(inputOutputGroup);
-      }
-    } else {
-      let field = createInputForField(key, transaction[key]);
-      if (field !== null) {
-        transactionJSONForm.appendChild(field);
-      }
+    if (key === "version") {
+      transactionJSONForm.appendChild(createInputForField(key, transaction[key], colors[colorIndex]));
+      colorIndex++;
     }
+    if (key === "inputCount") {
+      transactionJSONForm.appendChild(createInputForField(key, transaction[key], colors[colorIndex]));
+      colorIndex++;
+    }
+    if (key === "inputs") {
+      for (let i = 0; i < transaction[key].length; i++) {
+        const inputGroup = document.createElement("div");
+        inputGroup.classList.add("input-output-group");
+        for (let innerKey in transaction[key][i]) {
+          inputGroup.appendChild(createInputForField(`${key}[${i}].${innerKey}`, transaction[key][i][innerKey], colors[colorIndex % 6 + 2]));
+          colorIndex++;
+        }
+        transactionJSONForm.appendChild(inputGroup);
+      }
+      colorIndex = 8;
+    }
+    if (key === "outputCount") {
+      transactionJSONForm.appendChild(createInputForField(key, transaction[key], colors[colorIndex]));
+      colorIndex++;
+    }
+    if (key === "outputs") {
+      for (let i = 0; i < transaction[key].length; i++) {
+        const outputGroup = document.createElement("div");
+        outputGroup.classList.add("input-output-group");
+        for (let innerKey in transaction[key][i]) {
+          outputGroup.appendChild(createInputForField(`${key}[${i}].${innerKey}`, transaction[key][i][innerKey], colors[colorIndex % 3 + 9]));
+          colorIndex++;
+        }
+        transactionJSONForm.appendChild(outputGroup);
+      }
+      colorIndex = 12;
+    }
+    if (key === "nLockTime") {
+      transactionJSONForm.appendChild(createInputForField(key, transaction[key], colors[colorIndex]));
+      colorIndex++;
+  }
+  
   }
 
   // Append the form to the transaction JSON container
   transactionJSONContainer.appendChild(transactionJSONForm);
 
   // Add a button to serialize the transaction
-  const button = document.createElement("button");
-  button.innerText = "Generate Raw Transaction Data";
+const button = document.createElement("button");
+button.innerText = "Generate Raw Transaction Data";
+button.classList.add("btn", "btn-primary", "mt-2");
+button.style.display = "block";
+button.style.marginLeft = "auto";
+button.style.marginRight = "auto";
+
+
+  // Add a button to serialize the transaction
   button.addEventListener("click", function(event) {
     event.preventDefault();
+    
     let serializedTransaction = "";
+    let colorizedTransaction = "";
     for (let element of transactionJSONForm.elements) {
       if (element.tagName === "INPUT") {
         // Concatenate each element value
         serializedTransaction += element.value;
+  
+        // Add color markers based on the color class of the field
+        const colorMarker = `<!--${element.className}-->`;
+        colorizedTransaction += colorMarker + element.value;
       }
     }
+  
+    // Now replace the color markers with actual span tags
+    colorizedTransaction = colorizedTransaction.replace(/<!--color1-->/g, "<span class='color1'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color2-->/g, "<span class='color2'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color3-->/g, "<span class='color3'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color4-->/g, "<span class='color4'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color5-->/g, "<span class='color5'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color6-->/g, "<span class='color6'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color7-->/g, "<span class='color7'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color8-->/g, "<span class='color8'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color9-->/g, "<span class='color9'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color10-->/g, "<span class='color10'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color11-->/g, "<span class='color11'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color12-->/g, "<span class='color12'>");
+    colorizedTransaction = colorizedTransaction.replace(/<!--color13-->/g, "<span class='color13'>");
+    
+    // Add closing span tags
+    colorizedTransaction = colorizedTransaction.replace(/,/g, "</span>,");
+    colorizedTransaction = colorizedTransaction.replace(/}/g, "</span>}");
     
     // Display the serialized transaction data
     const generateRawTxPre = document.getElementById("generateRawTxPre");
-    generateRawTxPre.textContent = serializedTransaction;
+    generateRawTxPre.innerHTML = colorizedTransaction;
   });
-  transactionJSONContainer.appendChild(button);
+  
+  
+    
+    transactionJSONContainer.appendChild(button);
+
+    }
+
+async function generateTXID() {
+  const generateRawTxPre = document.getElementById("generateRawTxPre");
+  const rawTransactionData = generateRawTxPre.value;
+  
+  const hashedData = await callBackendHashing(rawTransactionData);
+
+  // Reverse the bytes for LE
+  let leHash = '';
+  for(let i = 0; i < hashedData.length; i+=2){
+    leHash = hashedData.slice(i,i+2) + leHash;
+  }
+
+  const txidLeContainer = document.getElementById("txidLeContainer");
+  const txidBeContainer = document.getElementById("txidBeContainer");
+
+  txidLeContainer.value = leHash;
+  txidBeContainer.value = hashedData;
 }
+
+const generateTXIDButton = document.getElementById("generateTXIDButton");
+generateTXIDButton.addEventListener("click", generateTXID);
+
+  
+async function broadcastTransaction() {
+  const generateRawTxPre = document.getElementById("generateRawTxPre");
+  const rawTransactionData = generateRawTxPre.innerText;
+
+  const requestOptions = {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ transaction: rawTransactionData })
+  };
+
+  const response = await fetch("http://203.18.30.236:8090/api/broadcast-transaction", requestOptions);
+  const data = await response.json();
+
+  if (!response.ok) {
+  alert("Failed to broadcast transaction: " + (data.message || ""));
+  } else {
+  alert("Transaction broadcasted, TXID: " + data.txid);
+  }
+  }
+
+  const broadcastTxButton = document.getElementById("broadcastTX");
+  broadcastTxButton.addEventListener("click", broadcastTransaction);
+
+  // Grab HTML elements
+const txidInput = document.getElementById('txidInput');
+const checkTxStatusButton = document.getElementById('checkTxStatus');
+const txStatusResult = document.getElementById('txStatusResult');
+const mineOneBlockButton = document.getElementById('mineOneBlock');
+
+// Check transaction status event listener
+checkTxStatusButton.addEventListener('click', async () => {
+    const txid = txidInput.value;
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txid: txid })
+    };
+
+    const response = await fetch("http://203.18.30.236:8090/api/get-transaction", requestOptions);
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert("Failed to retrieve transaction: " + (data.message || ""));
+    } else {
+        txStatusResult.innerText = JSON.stringify(data); // print transaction details to the paragraph
+    }
+});
+
+// Mine block event listener
+mineOneBlockButton.addEventListener('click', async () => {
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    };
+
+    const response = await fetch("http://203.18.30.236:8090/api/mine-blocks", requestOptions);
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert("Failed to mine block: " + (data.message || ""));
+    } else {
+        alert("Block mined successfully");
+    }
+});
+
+
+    
 
 
 
@@ -1272,3 +1429,5 @@ document.addEventListener('DOMContentLoaded', function() {
     this.classList.toggle('collapsed');
   });
 }); */
+
+

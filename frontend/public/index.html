@@ -849,7 +849,7 @@
         <h2>Raw Transaction Data</h2>
         <div id="transactionEditableJSONContainer" class="mt-4"></div>
 
-        <p>Now when we press the button, we concatenate all the values from the transaction's data fields, including the actual unlockScript from above.</p>
+        <p>Now that we have input the actual unlockScript and its size, when we press the button we concatenate all the values from the transaction's data fields, including the actual unlockScript from above to generate the raw serialised transaction data.</p>
         <div id="generateRawTxContainer" class="mt-4">
           <label for="generateRawTxPre" class="form-label">Raw Transaction Data:</label>
           <pre id="generateRawTxPre" class="border p-2"></pre>
@@ -857,19 +857,37 @@
       </div>
 
 
-      <div>
-          <h2>Generate TXID</h2>
-          <button id="generateTXID" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Generate TXID</button>
-          <p>Now when we press the button, we double hash (sha256) the raw transaction data to get the TXID. This value will be displayed in Little Endian. </p>
-              <label for="generateTXID" class="form-label">TXID:</label>
-              <pre id="generateTXID" class="border p-2"></pre>
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <h2>Transaction Data:</h2>
+            <textarea id="generateRawTxPre"></textarea>
+          </div>          
+          <div class="col">
+            <h2>Generate TXID:</h2>
+            <button id="generateTXIDButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Generate TXID</button>
+            <h3>TXID (LE):</h3>
+            <input type="text" id="txidLeContainer" readonly>
+            <h3>TXID (BE):</h3>
+            <input type="text" id="txidBeContainer" readonly>
+          </div>
+        </div>
       </div>
-
+      
       <div>
           <h2>Broadcast Transaction</h2>
           <button id="broadcastTX" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Broadcast Transaction</button>
           <p>When we press the button, we will broadcast the transaction to the RegTest Node through an RPC command. </p>
       </div>
+
+      <div>
+        <h2>Check Transaction Status</h2>
+        <input type="text" id="txidInput" placeholder="Enter Transaction ID" />
+        <button id="checkTxStatus" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Check Transaction Status</button>
+        <p id="txStatusResult">Transaction Status Will Be Displayed Here</p>
+        <button id="mineOneBlock" class="btn btn-primary mt-2">Mine 1 Block</button>
+      </div>
+      
 </div>   
     
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>

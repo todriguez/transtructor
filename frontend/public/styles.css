@@ -256,6 +256,21 @@ h1, h2, h3 {
   text-decoration: none;
 }
 
+.color1 { background-color: #a6cee3; }
+.color2 { background-color: #1f78b4; }
+.color3 { background-color: #b2df8a; }
+.color4 { background-color: #33a02c; }
+.color5 { background-color: #fb9a99; }
+.color6 { background-color: #e31a1c; }
+.color7 { background-color: #fdbf6f; }
+.color8 { background-color: #ff7f00; }
+.color9 { background-color: #cab2d6; }
+.color10 { background-color: #6a3d9a; }
+.color11 { background-color: #ffff99; }
+.color12 { background-color: #b15928; }
+.color13 { background-color: #f2f2f2; } /* This is a light grey color. It might be a good idea to have this for the `lockTime` field as it will be different from all the other colors. */
+
+
 
 
 /* ... previous CSS rules ... */
