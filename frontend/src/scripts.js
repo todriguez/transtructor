@@ -36,16 +36,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("processTransactionDataButton").addEventListener("click", () => {
-    console.log('Process Transaction Data button clicked');  // Add this line
+    console.log('Process Transaction Data button clicked');
     const inputCount = parseInt(document.querySelector("#inputCount").value);
     const transaction = createTransactionFromForm();
+    
+    // Display the standard JSON
     displayTransactionJSON(transaction);
+
+    // Display the editable transaction JSON form
+    displayEditableTransactionJSON(transaction);
+
     generatePreimageTemplates(inputCount);
-    generateUnlockScriptTemplates(inputCount);  // add this line
+    generateUnlockScriptTemplates(inputCount);
 
     // Call attachPreimageEventListeners after generating the preimage templates
     attachPreimageEventListeners();
-  });
+});
+
   
   document.getElementById('generateSighashButton').addEventListener('click', async () => {
     // Call the displayPreimages function
@@ -97,10 +104,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById('generatekeypair').addEventListener('click', generateKeyPair);
   document.getElementById('mineBlocks').addEventListener('click', mineBlocks);
-  document.getElementById('generateRawTx').addEventListener('click', generateRawTx);
-  document.getElementById('generateTXID').addEventListener('click', generateTXID);
+/*   document.getElementById('generateTXID').addEventListener('click', generateTXID);
   document.getElementById('broadcastTX').addEventListener('click', broadcastTX);
-
+ */
   /* document.getElementById('inputCount').addEventListener('input', createInputContainers);
   document.getElementById('outputCount').addEventListener('input', createOutputContainers); */
 });
@@ -356,15 +362,22 @@ function capitalizeFirstLetter(string) {
 }
 
 function createTransactionFromForm() {
-  const transactionLockTime = parseInt(document.querySelector("#nLockTime").value).toString(16).padStart(8, "0");
+  const transactionLockTime = document.querySelector("#nLockTime").value.padStart(8, "0");
 
   const inputs = getInputs().map(input => ({
-    ...input,
-    prevoutN: input.prevoutN.toString(16).padStart(8, "0"),
-    sighashFlag: input.sighashFlag.toString(16),
-    sequence: input.sequence.toString(16).padStart(8, "0"),
+    TXID: input.prevoutHash,
+    VOUT: input.prevoutN.padStart(8, "0"),
+    unlockScriptSize: input.unlockScript.length / 2,
+    unlockScript: input.unlockScript,
+    nSequence: input.sequence.padStart(8, "0"),
+    sighashFlag: input.sighashFlag,
   }));
-  const outputs = getOutputs();
+
+  const outputs = getOutputs().map(output => ({
+    value: output.value,
+    lockScriptSize: output.lockScriptSize,
+    lockScript: output.lockScript,
+  }));
 
   const transaction = {
     version: getTransactionVersionValue().padStart(8, "0"),
@@ -377,6 +390,7 @@ function createTransactionFromForm() {
 
   return transaction;
 }
+
 
 // Helper function to reverse the byte order
 function reverseEndian(hexString) {
@@ -411,36 +425,36 @@ function getInputs() {
 
   for (let i = 0; i < inputCount; i++) {
     const prevoutHash = document.getElementById(`inputTXID-${i}`).value;
-    const prevoutN = parseInt(document.getElementById(`inputVOUT-${i}`).value, 16);
+    const prevoutN = document.getElementById(`inputVOUT-${i}`).value;
+    const unlockScriptSize = document.getElementById(`inputUnlockScriptSize-${i}`).value;
     const unlockScript = document.getElementById(`inputUnlockScript-${i}`).value;
-    const sequence = parseInt(document.getElementById(`inputSequence-${i}`).value, 16);
-    const sighashFlag = parseInt(document.getElementById(`sighashFlag-${i}`).value, 16);
+    const sequence = document.getElementById(`inputSequence-${i}`).value;
+    const sighashFlag = document.getElementById(`sighashFlag-${i}`).value;
 
-    const unlockScriptSize = unlockScript.length / 2; // Divide by 2 since each byte is represented by 2 hexadecimal characters
-
-    inputs.push({ prevoutHash, prevoutN, unlockScript, sequence, sighashFlag, unlockScriptSize });
+    inputs.push({ prevoutHash, prevoutN, unlockScriptSize, unlockScript, sequence, sighashFlag });
   }
 
   return inputs;
 }
 
-function getOutputs() {
-  console.log(document.querySelectorAll("[id^='outputValue-']").length);
 
+
+function getOutputs() {
   const outputCount = parseInt(document.getElementById("outputCount").value, 16);
   const outputs = [];
 
   for (let i = 0; i < outputCount; i++) {
-    const value = document.getElementById(`outputValue-${i}`).value; // Remove parseInt conversion
-    const lockScript = document.getElementById(`outputLockScript-${i}`).value;  // Change outputlockScript to outputLockScript
+    const value = document.getElementById(`outputValue-${i}`).value;
+    const lockScriptSize = document.getElementById(`outputLockScriptSize-${i}`).value;
+    const lockScript = document.getElementById(`outputLockScript-${i}`).value;
 
-const lockScriptSize = document.getElementById(`outputLockScriptSize-${i}`).value;  // Change outputlockScriptSize to outputLockScriptSize
-
-    outputs.push({ value, lockScript, lockScriptSize });
+    outputs.push({ value, lockScriptSize, lockScript });
   }
 
   return outputs;
 }
+
+
 
 function createInputContainers(event) {
   updateInputOrOutputContainers("input", event);
@@ -1133,9 +1147,7 @@ function generateUnlockScript(wrapperElement) {
   const lockScriptTypeSelect = wrapperElement.querySelector(".lockScriptType");
   const lockScriptType = lockScriptTypeSelect.value;
 
-  // Variables for the generated unlock script and size
   let unlockScript = '';
-  let unlockScriptSize = 0;
 
   if (lockScriptType === 'p2pkh') {
     const signatureInput = wrapperElement.querySelector(".signature");
@@ -1146,24 +1158,102 @@ function generateUnlockScript(wrapperElement) {
     const sigHashType = sigHashTypeSelect.value;
     const publicKey = publicKeyInput.value;
 
-    // The P2PKH unlock script format is: [signature] [sigHashType] [publicKey]
-    unlockScript = `${signature} ${sigHashType} ${publicKey}`;
-    unlockScriptSize = unlockScript.length;  // This is an approximation. In a real scenario, you'd want to calculate the exact byte size
+    unlockScript = `${signature}${sigHashType}${publicKey}`;
   } else if (lockScriptType === 'custom') {
     const customUnlockScriptTextarea = wrapperElement.querySelector(".customUnlockScript");
-
     unlockScript = customUnlockScriptTextarea.value;
-    unlockScriptSize = unlockScript.length;  // Again, this is an approximation
   }
 
-  // Set the generated unlock script and size in the output elements
+  const unlockScriptSize = Math.ceil(unlockScript.length / 2);  // Since each byte is represented by 2 hexadecimal characters
+  // Set the generated unlockScript and size in the output elements
   const unlockScriptSizePre = wrapperElement.querySelector(".unlockScriptSizePre");
   const unlockScriptOutputPre = wrapperElement.querySelector(".unlockScriptOutputPre");
 
   unlockScriptSizePre.innerText = unlockScriptSize;
   unlockScriptOutputPre.innerText = unlockScript;
-    return { unlockScript, size: unlockScriptSize };
+  
+  return { unlockScript, size: unlockScriptSize };
 }
+
+function createInputForField(key, value) {
+  const div = document.createElement("div");
+
+  const label = document.createElement("label");
+  label.innerText = key;
+  div.appendChild(label);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.name = key;
+  
+  // Set the value only if it's not unlockScriptSize or unlockScript
+  if (!(key.endsWith("unlockScriptSize") || key.endsWith("unlockScript"))) {
+    input.value = value;
+  }
+  
+  div.appendChild(input);
+
+  return div;
+}
+
+
+
+function displayEditableTransactionJSON(transaction) {
+  const transactionJSONContainer = document.getElementById("transactionEditableJSONContainer");
+
+  // Remove the existing transaction JSON data if it exists
+  const existingTransactionData = transactionJSONContainer.querySelector("form");
+  if (existingTransactionData) {
+    transactionJSONContainer.removeChild(existingTransactionData);
+  }
+
+  // Create a form to display the editable transaction JSON data
+  const transactionJSONForm = document.createElement("form");
+  for (let key in transaction) {
+    if (key === "inputs" || key === "outputs") {
+      for (let i = 0; i < transaction[key].length; i++) {
+        const inputOutputGroup = document.createElement("div");
+        inputOutputGroup.classList.add("input-output-group");
+        for (let innerKey in transaction[key][i]) {
+          let field = createInputForField(`${key}[${i}].${innerKey}`, transaction[key][i][innerKey]);
+          if (field !== null) {
+            inputOutputGroup.appendChild(field);
+          }
+        }
+        transactionJSONForm.appendChild(inputOutputGroup);
+      }
+    } else {
+      let field = createInputForField(key, transaction[key]);
+      if (field !== null) {
+        transactionJSONForm.appendChild(field);
+      }
+    }
+  }
+
+  // Append the form to the transaction JSON container
+  transactionJSONContainer.appendChild(transactionJSONForm);
+
+  // Add a button to serialize the transaction
+  const button = document.createElement("button");
+  button.innerText = "Generate Raw Transaction Data";
+  button.addEventListener("click", function(event) {
+    event.preventDefault();
+    let serializedTransaction = "";
+    for (let element of transactionJSONForm.elements) {
+      if (element.tagName === "INPUT") {
+        // Concatenate each element value
+        serializedTransaction += element.value;
+      }
+    }
+    
+    // Display the serialized transaction data
+    const generateRawTxPre = document.getElementById("generateRawTxPre");
+    generateRawTxPre.textContent = serializedTransaction;
+  });
+  transactionJSONContainer.appendChild(button);
+}
+
+
 
 
 
@@ -1182,5 +1272,3 @@ document.addEventListener('DOMContentLoaded', function() {
     this.classList.toggle('collapsed');
   });
 }); */
-
-
