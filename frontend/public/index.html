@@ -722,172 +722,168 @@
       </template>
 
 
-    </div>    
-      
-    <div>
-      <h2>Sighash</h2>
-      <div id="sighashContainer" class="mt-4">
-        <div id="preimageTableContainer">
-            <table id="preimageTable">
-            <thead>
-                <tr>
-                <th>Input #</th>
-                <th>Preimage</th>
-                </tr>
-            </thead>
-            <tbody id="preimageTableBody"></tbody>
-            </table>
+      <div>
+        <h2>Sighash</h2>
+        <div id="sighashContainer" class="mt-4">
+          <div id="preimageTableContainer">
+              <table id="preimageTable">
+              <thead>
+                  <tr>
+                  <th>Input #</th>
+                  <th>Preimage</th>
+                  </tr>
+              </thead>
+              <tbody id="preimageTableBody"></tbody>
+              </table>
+          </div>
+          <div id="preimageJSONContainer" class="col-md-12"></div>
+          <nav>
+              <ul id="preimageJSONPagination" class="pagination"></ul>
+          </nav>
         </div>
-        <div id="preimageJSONContainer" class="col-md-12"></div>
-        <nav>
-            <ul id="preimageJSONPagination" class="pagination"></ul>
-        </nav>
-      </div>
-
-      <button id="generateSighashButton" type="button" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Hash Preimages</button>
-      <p>Now when we press the button, the PreImage will be double hashed with SHA256 to create the SigHash </p>
-
-      <div id="sighashTableContainer" class="mt-4">
-        <table id="sighashTable">
-        <thead>
-            <tr>
-            <th>Input #</th>
-            <th>SIGHASH</th>
-            </tr>
-        </thead>
-        <tbody id="sighashTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div>
-      <h2>Signature</h2>
-      <div id="unsignedSighashTableContainer" class="mt-4">
-          <table id="unsignedSighashTable">
-            <thead>
+  
+        <button id="generateSighashButton" type="button" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Hash Preimages</button>
+        <p>Now when we press the button, the PreImage will be double hashed with SHA256 to create the SigHash </p>
+  
+        <div id="sighashTableContainer" class="mt-4">
+          <table id="sighashTable">
+          <thead>
               <tr>
-                <th>Input #</th>
-                <th>Unsigned SIGHASH</th>
-                <th>Private Key</th>
+              <th>Input #</th>
+              <th>SIGHASH</th>
               </tr>
-            </thead>
-            <tbody id="unsignedSighashTableBody"></tbody>
+          </thead>
+          <tbody id="sighashTableBody"></tbody>
           </table>
         </div>
-
-        <button id="signSighash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SIGHASH</button>
-        <p>Now when we press the button, we will sign the SIGHASH with the private key that solves the lockScript for the inputs we are spending and the signature will be presented in the table below. </p>
-        
-        <div id="signatureTableContainer" class="mt-4">
-            <table id="signatureTable">
+      </div>
+  
+      <div>
+        <h2>Signature</h2>
+        <div id="unsignedSighashTableContainer" class="mt-4">
+            <table id="unsignedSighashTable">
               <thead>
                 <tr>
                   <th>Input #</th>
-                  <th>Signature</th>
+                  <th>Unsigned SIGHASH</th>
+                  <th>Private Key</th>
                 </tr>
               </thead>
-              <tbody id="signatureTableBody"></tbody>
+              <tbody id="unsignedSighashTableBody"></tbody>
             </table>
-        </div>
-      </div>
-      
-      <div id="unlockScriptContainer">
-        <h2>UnlockScripts</h2>
-        <!-- UnlockScript form sections will go here -->
-      </div>
-      
-      <!-- This is a hidden template for the UnlockScript form sections -->
-<template id="unlockScriptFormTemplate">
-  <div class="unlockScriptWrapper">
-    <h3 class="unlockScriptIndex"></h3>
-
-    <label for="lockScriptType" class="form-label">LockScript Type:</label>
-    <select class="lockScriptType">
-      <option value="p2pkh">P2PKH</option>
-      <option value="custom">Custom</option>
-      <!-- Add other lockScript types here -->
-    </select>
-
-    <div class="p2pkhFields">
-      <label class="form-label">Signature:</label>
-      <input type="text" class="signature" name="signature">
-
-      <label class="form-label">SigHash Type:</label>
-      <select class="sigHashType">
-        <option value="41">ALL</option>
-        <option value="42">NONE</option>
-        <option value="43">SINGLE</option>
-        <option value="C1">ALL | ANYONECANPAY</option>
-        <option value="C2">NONE | ANYONECANPAY</option>
-        <option value="C3">SINGLE | ANYONECANPAY</option>
-      </select>
-
-      <label class="form-label">Public Key:</label>
-      <input type="text" class="publicKey" name="publicKey">
-    </div>
-
-    <div class="customFields" style="display: none;">
-      <label class="form-label">Custom UnlockScript:</label>
-      <textarea class="customUnlockScript"></textarea>
-    </div>
-
-    <button class="btn btn-primary mt-2 generateUnlockScriptButton">Generate UnlockScript</button>
-
-    <div class="unlockScriptOutput mt-4">
-      <label class="form-label">UnlockScript Size (bytes):</label>
-      <pre class="border p-2 unlockScriptSizePre"></pre>
-
-      <label class="form-label">UnlockScript:</label>
-      <pre class="border p-2 unlockScriptOutputPre"></pre>
-    </div>
-  </div>
-</template>
-
-      
-        
-      <div>
-        <h2>Raw Transaction Data</h2>
-        <div id="transactionEditableJSONContainer" class="mt-4"></div>
-
-        <p>Now that we have input the actual unlockScript and its size, when we press the button we concatenate all the values from the transaction's data fields, including the actual unlockScript from above to generate the raw serialised transaction data.</p>
-        <div id="generateRawTxContainer" class="mt-4">
-          <label for="generateRawTxPre" class="form-label">Raw Transaction Data:</label>
-          <pre id="generateRawTxPre" class="border p-2"></pre>
-        </div>
-      </div>
-
-
-      <div class="container">
-        <div class="row">
-          <div class="col">
-            <h2>Transaction Data:</h2>
-            <textarea id="generateRawTxPre"></textarea>
-          </div>          
-          <div class="col">
-            <h2>Generate TXID:</h2>
-            <button id="generateTXIDButton" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Generate TXID</button>
-            <h3>TXID (LE):</h3>
-            <input type="text" id="txidLeContainer" readonly>
-            <h3>TXID (BE):</h3>
-            <input type="text" id="txidBeContainer" readonly>
+          </div>
+  
+          <button id="signSighash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SIGHASH</button>
+          <p>Now when we press the button, we will sign the SIGHASH with the private key that solves the lockScript for the inputs we are spending and the signature will be presented in the table below. </p>
+          
+          <div id="signatureTableContainer" class="mt-4">
+              <table id="signatureTable">
+                <thead>
+                  <tr>
+                    <th>Input #</th>
+                    <th>Signature</th>
+                  </tr>
+                </thead>
+                <tbody id="signatureTableBody"></tbody>
+              </table>
           </div>
         </div>
+        
+        <div id="unlockScriptContainer">
+          <h2>UnlockScripts</h2>
+          <!-- UnlockScript form sections will go here -->
+        </div>
+        
+        <!-- This is a hidden template for the UnlockScript form sections -->
+  <template id="unlockScriptFormTemplate">
+    <div class="unlockScriptWrapper">
+      <h3 class="unlockScriptIndex"></h3>
+  
+      <label for="lockScriptType" class="form-label">LockScript Type:</label>
+      <select class="lockScriptType">
+        <option value="p2pkh">P2PKH</option>
+        <option value="custom">Custom</option>
+        <!-- Add other lockScript types here -->
+      </select>
+  
+      <div class="p2pkhFields">
+        <label class="form-label">Signature:</label>
+        <input type="text" class="signature" name="signature">
+  
+        <label class="form-label">SigHash Type:</label>
+        <select class="sigHashType">
+          <option value="41">ALL</option>
+          <option value="42">NONE</option>
+          <option value="43">SINGLE</option>
+          <option value="C1">ALL | ANYONECANPAY</option>
+          <option value="C2">NONE | ANYONECANPAY</option>
+          <option value="C3">SINGLE | ANYONECANPAY</option>
+        </select>
+  
+        <label class="form-label">Public Key:</label>
+        <input type="text" class="publicKey" name="publicKey">
       </div>
-      
-      <div>
-          <h2>Broadcast Transaction</h2>
-          <button id="broadcastTX" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Broadcast Transaction</button>
-          <p>When we press the button, we will broadcast the transaction to the RegTest Node through an RPC command. </p>
+  
+      <div class="customFields" style="display: none;">
+        <label class="form-label">Custom UnlockScript:</label>
+        <textarea class="customUnlockScript"></textarea>
       </div>
+  
+      <button class="btn btn-primary mt-2 generateUnlockScriptButton">Generate UnlockScript</button>
+  
+      <div class="unlockScriptOutput mt-4">
+        <label class="form-label">UnlockScript Size (bytes):</label>
+        <pre class="border p-2 unlockScriptSizePre"></pre>
+  
+        <label class="form-label">UnlockScript:</label>
+        <pre class="border p-2 unlockScriptOutputPre"></pre>
+      </div>
+    </div>
+  </template>
 
-      <div>
-        <h2>Check Transaction Status</h2>
-        <input type="text" id="txidInput" placeholder="Enter Transaction ID" />
-        <button id="checkTxStatus" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Check Transaction Status</button>
-        <p id="txStatusResult">Transaction Status Will Be Displayed Here</p>
-        <button id="mineOneBlock" class="btn btn-primary mt-2">Mine 1 Block</button>
-      </div>
-      
+  <div class="container">
+    <div class="row">
+        <div class="col">
+            <h2>Raw Transaction Data</h2>
+            <div id="transactionEditableJSONContainer" class="mt-4"></div>
+            <p>Now that we have input the actual unlockScript and its size, when we press the button we concatenate all the values from the transaction's data fields, including the actual unlockScript from above to generate the raw serialised transaction data.</p>
+            <div id="generateRawTxContainer" class="mt-4">
+                <label for="generateRawTxPre" class="form-label">Raw Transaction Data:</label>
+                <pre id="generateRawTxPre" class="border p-2"></pre>
+            </div>
+            <label for="serialisedRawTxData" class="form-label mt-4">Serialised Raw Transaction Data:</label>
+            <div style="width: 80%; margin: 0 auto;">
+                <textarea id="serialisedRawTxData" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mt-2 d-flex justify-content-center">
+              <button id="generateTXIDButton" class="btn btn-primary mt-2 btn-space">Generate TXID</button>
+              <button id="broadcastTX" class="btn btn-primary mt-2">Broadcast Transaction</button>
+            </div>
+            <label for="txidLeContainer" class="form-label mt-4">TXID (LE):</label>
+            <div style="width: 80%; margin: 0 auto;">
+              <input type="text" id="txidLeContainer" readonly style="width: 100%;">
+            </div>
+            <label for="txidBeContainer" class="form-label mt-4">TXID (BE):</label>
+            <div style="width: 80%; margin: 0 auto;">
+              <input type="text" id="txidBeContainer" readonly style="width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div>
+      <h2>Check Transaction Status</h2>
+      <input type="text" id="txidInput" placeholder="Enter Transaction ID" />
+      <button id="checkTxStatus" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Check Transaction Status</button>
+      <p id="txStatusResult">Transaction Status Will Be Displayed Here</p>
+      <button id="mineOneBlock" class="btn btn-primary mt-2">Mine 1 Block</button>
+    </div>
+  </div>
+  </div>    
+
+  
+
 </div>   
     
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>

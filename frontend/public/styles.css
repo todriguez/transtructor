@@ -271,6 +271,10 @@ h1, h2, h3 {
 .color13 { background-color: #f2f2f2; } /* This is a light grey color. It might be a good idea to have this for the `lockTime` field as it will be different from all the other colors. */
 
 
+/* styles.css */
+.btn-space {
+  margin-right: 1cm;   /* adjust as needed */
+}
 
 
 /* ... previous CSS rules ... */

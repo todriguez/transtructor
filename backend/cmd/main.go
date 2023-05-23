@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -57,6 +58,10 @@ type Transaction struct {
 	ScriptHex     string  `json:"scripthex"`
 	ReqSigs       int     `json:"reqsigs"`
 	Confirmations int     `json:"confirmations"`
+}
+
+type ErrorResponse struct {
+	Message string `json:"message"`
 }
 
 func callRPC(requestBody interface{}) (*RPCResponse, error) {
@@ -488,11 +493,19 @@ func filterValidTransactions(transactions []btcjson.TxRawResult, client *rpcclie
 	return validTransactions, nil
 }
 
-func doubleSha256(data string) string {
+func doubleSha256(hexData string) string {
+	// Convert the hex string to a byte array
+	rawData, err := hex.DecodeString(hexData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Perform the first hash
 	hasher := sha256.New()
-	hasher.Write([]byte(data))
+	hasher.Write(rawData)
 	firstHash := hasher.Sum(nil)
 
+	// Perform the second hash
 	hasher.Reset()
 	hasher.Write(firstHash)
 	secondHash := hasher.Sum(nil)
@@ -603,6 +616,129 @@ func signSighashes(unsignedSighashes, privateKeys []string) ([]string, error) {
 	return signatures, nil
 }
 
+func broadcastTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	// Enable CORS for the client-side application
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
+
+	var requestData map[string]string
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid request data", http.StatusBadRequest)
+		return
+	}
+
+	txHex, ok := requestData["transaction"]
+	if !ok {
+		http.Error(w, "Transaction not provided", http.StatusBadRequest)
+		return
+	}
+
+	txHex = strings.TrimSpace(txHex)
+
+	/* // Decode the transaction
+	tx, err := decodeTransaction(txHex)
+	if err != nil {
+		http.Error(w, "Invalid transaction", http.StatusBadRequest)
+		return
+	} */
+
+	// Call RPC
+	req := RPCRequest{
+		ID:      1,
+		Method:  "sendrawtransaction",
+		Params:  []interface{}{txHex},
+		Jsonrpc: "1.0",
+	}
+
+	// Here is the missing function call:
+	response, err := callRPC(req)
+
+	// Then in your error handling:
+	if err != nil {
+		log.Println("Error sending transaction via RPC:", err)
+		errorResponse := ErrorResponse{Message: "Failed to send transaction"}
+		errorJSON, _ := json.Marshal(errorResponse)
+		http.Error(w, string(errorJSON), http.StatusInternalServerError)
+		return
+	}
+
+	// Check the response
+	var txid string
+	err = json.Unmarshal(response.Result, &txid)
+	if err != nil {
+		log.Println("Error unmarshaling transaction id:", err)
+		http.Error(w, "Failed to parse transaction id", http.StatusInternalServerError)
+		return
+	}
+
+	result := map[string]string{
+		"txid": txid,
+	}
+
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		http.Error(w, "Failed to encode result as JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(resultJSON)
+}
+
+func getTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	// Enable CORS for the client-side application
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid method", http.StatusBadRequest)
+		return
+	}
+
+	var requestData map[string]string
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid request data", http.StatusBadRequest)
+		return
+	}
+
+	txid, ok := requestData["txid"]
+	if !ok {
+		http.Error(w, "Transaction id not provided", http.StatusBadRequest)
+		return
+	}
+
+	// Call RPC
+	req := RPCRequest{
+		ID:      1,
+		Method:  "gettransaction",
+		Params:  []interface{}{txid},
+		Jsonrpc: "1.0",
+	}
+
+	response, err := callRPC(req)
+	if err != nil {
+		log.Println("Error retrieving transaction via RPC:", err)
+		http.Error(w, "Failed to retrieve transaction", http.StatusInternalServerError)
+		return
+	}
+
+	resultJSON, err := json.Marshal(response.Result)
+	if err != nil {
+		http.Error(w, "Failed to encode result as JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(resultJSON)
+}
+
 func main() {
 	// Set up CORS
 	c := cors.New(cors.Options{
@@ -619,6 +755,8 @@ func main() {
 	http.Handle("/api/proxy-transaction-details", c.Handler(http.HandlerFunc(proxyTransactionDetails)))
 	http.Handle("/api/double-sha256", c.Handler(http.HandlerFunc(doubleSha256Handler)))
 	http.Handle("/api/sign-sighashes", c.Handler(http.HandlerFunc(signSighashesHandler)))
+	http.Handle("/api/broadcast-transaction", c.Handler(http.HandlerFunc(broadcastTransactionHandler)))
+	http.Handle("/api/get-transaction", c.Handler(http.HandlerFunc(getTransactionHandler)))
 
 	port := "8090"
 	log.Println("Server running on port", port)

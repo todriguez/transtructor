@@ -1175,6 +1175,44 @@ function generateUnlockScript(wrapperElement) {
   return { unlockScript, size: unlockScriptSize };
 }
 
+document.addEventListener('DOMContentLoaded', (event) => {
+  // The code inside this function will run when the page is fully loaded
+  
+  const generateTXIDButton = document.getElementById("generateTXIDButton");
+  generateTXIDButton.addEventListener("click", generateTXID);
+  
+  // Your createInputForField, displayEditableTransactionJSON and generateTXID functions go here
+  
+  async function generateTXID() {
+    // Clear previous TXID values
+    document.getElementById("txidLeContainer").value = "";
+    document.getElementById("txidBeContainer").value = "";
+    
+
+    const serialisedRawTxData = document.getElementById("serialisedRawTxData");
+    const rawTransactionData = serialisedRawTxData.value;
+    
+    const hashedData = await callBackendHashing(rawTransactionData);
+  
+    // Reverse the bytes for LE
+    let leHash = '';
+    for(let i = 0; i < hashedData.length; i+=2){
+      leHash = hashedData.slice(i,i+2) + leHash;
+    }
+  
+    const txidLeContainer = document.getElementById("txidLeContainer");
+    const txidBeContainer = document.getElementById("txidBeContainer");
+
+  
+    txidLeContainer.value = leHash;
+    txidBeContainer.value = hashedData;
+}
+
+  
+  /* const generateTXIDButton = document.getElementById("generateTXIDButton");
+  generateTXIDButton.addEventListener("click", generateTXID); */
+});
+
 function createInputForField(key, value, color) {
   const div = document.createElement("div");
 
@@ -1196,9 +1234,6 @@ function createInputForField(key, value, color) {
 
   return div;
 }
-
-
-
 
 function displayEditableTransactionJSON(transaction) {
   const transactionJSONContainer = document.getElementById("transactionEditableJSONContainer");
@@ -1230,6 +1265,9 @@ function displayEditableTransactionJSON(transaction) {
         const inputGroup = document.createElement("div");
         inputGroup.classList.add("input-output-group");
         for (let innerKey in transaction[key][i]) {
+          // Add this line to skip creating an input for 'sighashFlag'
+          if (innerKey === 'sighashFlag') continue;
+    
           inputGroup.appendChild(createInputForField(`${key}[${i}].${innerKey}`, transaction[key][i][innerKey], colors[colorIndex % 6 + 2]));
           colorIndex++;
         }
@@ -1237,6 +1275,7 @@ function displayEditableTransactionJSON(transaction) {
       }
       colorIndex = 8;
     }
+    
     if (key === "outputCount") {
       transactionJSONForm.appendChild(createInputForField(key, transaction[key], colors[colorIndex]));
       colorIndex++;
@@ -1319,48 +1358,39 @@ button.style.marginRight = "auto";
 
     }
 
-async function generateTXID() {
-  const generateRawTxPre = document.getElementById("generateRawTxPre");
-  const rawTransactionData = generateRawTxPre.value;
-  
-  const hashedData = await callBackendHashing(rawTransactionData);
 
-  // Reverse the bytes for LE
-  let leHash = '';
-  for(let i = 0; i < hashedData.length; i+=2){
-    leHash = hashedData.slice(i,i+2) + leHash;
-  }
 
-  const txidLeContainer = document.getElementById("txidLeContainer");
-  const txidBeContainer = document.getElementById("txidBeContainer");
-
-  txidLeContainer.value = leHash;
-  txidBeContainer.value = hashedData;
-}
-
-const generateTXIDButton = document.getElementById("generateTXIDButton");
-generateTXIDButton.addEventListener("click", generateTXID);
 
   
-async function broadcastTransaction() {
-  const generateRawTxPre = document.getElementById("generateRawTxPre");
-  const rawTransactionData = generateRawTxPre.innerText;
-
-  const requestOptions = {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ transaction: rawTransactionData })
-  };
-
-  const response = await fetch("http://203.18.30.236:8090/api/broadcast-transaction", requestOptions);
-  const data = await response.json();
-
-  if (!response.ok) {
-  alert("Failed to broadcast transaction: " + (data.message || ""));
-  } else {
-  alert("Transaction broadcasted, TXID: " + data.txid);
-  }
-  }
+    async function broadcastTransaction() {
+      const serialisedRawTxData = document.getElementById("serialisedRawTxData");
+      const rawTransactionData = serialisedRawTxData.value;
+    
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction: rawTransactionData })
+      };
+    
+      const response = await fetch("http://203.18.30.236:8090/api/broadcast-transaction", requestOptions);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch(e) {
+        console.error('Error parsing response:', e);
+        alert("Failed to parse server response.");
+        return;
+      }
+    
+      if (!response.ok) {
+        alert("Failed to broadcast transaction: " + (data.message || ""));
+      } else {
+        alert("Transaction broadcasted, TXID: " + data.txid);
+      }
+    }
+    
+    
 
   const broadcastTxButton = document.getElementById("broadcastTX");
   broadcastTxButton.addEventListener("click", broadcastTransaction);
