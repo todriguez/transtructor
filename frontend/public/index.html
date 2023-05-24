@@ -761,16 +761,18 @@
       <div>
         <h2>Signature</h2>
         <div id="unsignedSighashTableContainer" class="mt-4">
-            <table id="unsignedSighashTable">
-              <thead>
-                <tr>
-                  <th>Input #</th>
-                  <th>Unsigned SIGHASH</th>
-                  <th>Private Key</th>
-                </tr>
-              </thead>
-              <tbody id="unsignedSighashTableBody"></tbody>
-            </table>
+          <table id="unsignedSighashTable">
+            <thead>
+              <tr>
+                <th>Input #</th>
+                <th>Unsigned SIGHASH</th>
+                <th>Private Key</th>
+                <th>SigHash Type</th>
+              </tr>
+            </thead>
+            <tbody id="unsignedSighashTableBody"></tbody>
+          </table>
+          
           </div>
   
           <button id="signSighash" class="btn btn-primary mt-2" style="display: block; margin-left: auto; margin-right: auto;">Sign SIGHASH</button>
@@ -810,15 +812,6 @@
         <label class="form-label">Signature:</label>
         <input type="text" class="signature" name="signature">
   
-        <label class="form-label">SigHash Type:</label>
-        <select class="sigHashType">
-          <option value="41">ALL</option>
-          <option value="42">NONE</option>
-          <option value="43">SINGLE</option>
-          <option value="C1">ALL | ANYONECANPAY</option>
-          <option value="C2">NONE | ANYONECANPAY</option>
-          <option value="C3">SINGLE | ANYONECANPAY</option>
-        </select>
   
         <label class="form-label">Public Key:</label>
         <input type="text" class="publicKey" name="publicKey">

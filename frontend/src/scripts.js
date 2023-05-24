@@ -119,8 +119,9 @@ window.addEventListener("load", () => {
   });
   
   document.getElementById('signSighash').addEventListener('click', async () => {
-    const unsignedSighashes = getSighashesFromTable(); // Assuming you have this function
-    const privateKeys = getPrivateKeysFromTable(); // You need to implement this
+    const unsignedSighashes = getSighashesFromTable();
+    const privateKeys = getPrivateKeysFromTable();
+    const sigHashTypes = getSigHashTypesFromTable();
   
     const response = await fetch('http://203.18.30.236:8090/api/sign-sighashes', {
       method: 'POST',
@@ -130,6 +131,7 @@ window.addEventListener("load", () => {
       body: JSON.stringify({
         unsignedSighashes: unsignedSighashes,
         privateKeys: privateKeys,
+        sigHashTypes: sigHashTypes,
       }),
     });
   
@@ -141,6 +143,7 @@ window.addEventListener("load", () => {
       console.error('Error signing SIGHASHes:', response.statusText);
     }
   });
+  
   
   
 
@@ -1020,34 +1023,71 @@ function displayUnsignedSighashes(sighashes) {
     newRow.innerHTML = `
       <td>${i + 1}</td>
       <td>${sighashes[i]}</td>
-      <td><input type="text" id="privateKey${i + 1}" class="privateKey" placeholder="Enter private key"></td>
+      <td><input class="privateKey" type="text" placeholder="Enter the private key"></td>
+      <td><input class="sigHashType" type="text" placeholder="Enter SigHash flag"></td>
     `;
     unsignedSighashTableBody.appendChild(newRow);
   }
 }
 
-async function signSighashes(sighashes, privateKeys) {
-  const payload = {
+
+function hexToBytes(hex) {
+  let bytes = [];
+  for(let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.substr(i, 2), 16));
+  }
+  return bytes;
+}
+
+
+async function signSighashes(sighashes, privateKeys, sigHashTypes) {
+  // Ensure that sighashes, privateKeys and sighashTypes have the same length
+  if (sighashes.length !== privateKeys.length || sighashes.length !== sighashTypes.length) {
+    throw new Error("Lengths of sighashes, privateKeys and sighashTypes do not match");
+  }
+
+  // Prepare a single request to be sent to the sign-sighashes endpoint
+  const request = {
     UnsignedSighashes: sighashes,
     PrivateKeys: privateKeys,
+    SigHashType: sigHashTypes
   };
 
+  // Log the request body
+  console.log("Request body: ", JSON.stringify(request));
+
+  console.log(unsignedSighashes, privateKeys, sighashTypes);
+console.log(JSON.stringify({
+        unsignedSighashes: unsignedSighashes,
+        privateKeys: privateKeys,
+        sigHashTypes: sigHashTypes,
+}));
+
+
+  // Send the fetch request
   const response = await fetch("http://203.18.30.236:8090/api/sign-sighashes", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(request),
   });
 
+  // Ensure that the request succeeded
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
+  // Parse the response as JSON
   const data = await response.json();
 
-  return data.Signatures;
+  // Extract the signatures from the data
+  const signatures = data.Signatures;
+
+  return signatures;
 }
+
+
 
 function getSighashesFromTable() {
   const unsignedSighashTableBody = document.getElementById("unsignedSighashTableBody");
@@ -1060,8 +1100,10 @@ function getPrivateKeysFromTable() {
   return Array.from(privateKeyInputs).map((input) => input.value);
 }
 
-
-
+function getSigHashTypesFromTable() {
+  const sigHashTypeInputs = document.querySelectorAll(".sigHashType");
+  return Array.from(sigHashTypeInputs).map((input) => input.value);
+}
 
 
 function displaySignatures(signatures) {
@@ -1151,29 +1193,26 @@ function generateUnlockScript(wrapperElement) {
 
   if (lockScriptType === 'p2pkh') {
     const signatureInput = wrapperElement.querySelector(".signature");
-    const sigHashTypeSelect = wrapperElement.querySelector(".sigHashType");
     const publicKeyInput = wrapperElement.querySelector(".publicKey");
 
     const signature = signatureInput.value;
-    const sigHashType = sigHashTypeSelect.value;
     const publicKey = publicKeyInput.value;
 
-    unlockScript = `${signature}${sigHashType}${publicKey}`;
+    const lenSig = (signature.length / 2).toString(16).padStart(2, '0');
+    const lenPubKey = (publicKey.length / 2).toString(16).padStart(2, '0');
+
+    unlockScript = `${lenSig}${signature}${lenPubKey}${publicKey}`;
   } else if (lockScriptType === 'custom') {
     const customUnlockScriptTextarea = wrapperElement.querySelector(".customUnlockScript");
     unlockScript = customUnlockScriptTextarea.value;
   }
 
   const unlockScriptSize = (Math.ceil(unlockScript.length / 2)).toString(16);
-  // Set the generated unlockScript and size in the output elements
-  const unlockScriptSizePre = wrapperElement.querySelector(".unlockScriptSizePre");
-  const unlockScriptOutputPre = wrapperElement.querySelector(".unlockScriptOutputPre");
 
-  unlockScriptSizePre.innerText = unlockScriptSize;
-  unlockScriptOutputPre.innerText = unlockScript;
-  
   return { unlockScript, size: unlockScriptSize };
 }
+
+
 
 document.addEventListener('DOMContentLoaded', (event) => {
   // The code inside this function will run when the page is fully loaded

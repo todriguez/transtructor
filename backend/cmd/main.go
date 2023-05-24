@@ -20,12 +20,13 @@ import (
 	"github.com/rs/cors"
 )
 
-type SignRequest struct {
+type SignSighashesRequest struct {
 	UnsignedSighashes []string `json:"unsignedSighashes"`
 	PrivateKeys       []string `json:"privateKeys"`
+	SighashTypes      []string `json:"sighashTypes"` // Change this to []string
 }
 
-type SignResponse struct {
+type SignSighashesResponse struct {
 	Signatures []string `json:"signatures"`
 }
 
@@ -536,83 +537,105 @@ func doubleSha256Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signSighashesHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the request body
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	// Decode the JSON request
-	var signReq SignRequest
-	err = json.Unmarshal(body, &signReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	// decode the request body
+	var req SignSighashesRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	// Sign the SIGHASHes with the provided private keys
-	signatures, err := signSighashes(signReq.UnsignedSighashes, signReq.PrivateKeys)
-	if err != nil {
-		log.Println(err) // Add this line
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	log.Println("Received body: ", req)
+
+	// Log the lengths of the arrays
+	log.Println(len(req.UnsignedSighashes), len(req.PrivateKeys), len(req.SighashTypes))
+
+	if len(req.UnsignedSighashes) != len(req.PrivateKeys) || len(req.UnsignedSighashes) != len(req.SighashTypes) {
+		http.Error(w, "length of unsignedSighashes, privateKeys, and sighashTypes must be equal", http.StatusBadRequest)
 		return
 	}
 
-	// Create the response object
-	signResp := SignResponse{
-		Signatures: signatures,
-	}
-
-	// Encode the response as JSON
-	respBytes, err := json.Marshal(signResp)
+	signatures, err := signSighashes(req.UnsignedSighashes, req.PrivateKeys, req.SighashTypes)
 	if err != nil {
-		log.Println(err) // Add this line
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to sign sighashes: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Set the response header and write the response
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBytes)
+	log.Println("Sending signatures: ", signatures)
+
+	// encode the response body
+	if err := json.NewEncoder(w).Encode(SignSighashesResponse{Signatures: signatures}); err != nil {
+		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
-func signSighashes(unsignedSighashes, privateKeys []string) ([]string, error) {
+func signSighashes(unsignedSighashes []string, privateKeys []string, sighashTypes []string) ([]string, error) {
 	signatures := make([]string, len(unsignedSighashes))
 
-	// Iterate through the unsignedSighashes and privateKeys arrays
-	for i := 0; i < len(unsignedSighashes); i++ {
+	for i := range unsignedSighashes {
+		log.Println("Processing unsignedSighash at index", i)
+
 		// Decode the private key from its WIF representation
+		log.Println("Decoding WIF for private key...")
 		wif, err := btcutil.DecodeWIF(privateKeys[i])
 		if err != nil {
-			return nil, fmt.Errorf("error decoding WIF for private key %d: %v", i, err)
+			return nil, fmt.Errorf("error decoding WIF for private key: %v", err)
 		}
+		log.Println("Successfully decoded WIF for private key.")
 
 		// Ensure the decoded private key is for the correct network (mainnet, testnet3, etc.)
+		log.Println("Checking private key for the correct network...")
 		if !wif.IsForNet(&chaincfg.RegressionNetParams) {
-			return nil, fmt.Errorf("private key %d is not for the regtest network", i)
+			return nil, fmt.Errorf("private key is not for the regtest network")
 		}
+		log.Println("Private key is for the correct network.")
 
 		// Parse the SIGHASH from its hex representation
+		log.Println("Decoding SIGHASH...")
 		sighashBytes, err := hex.DecodeString(unsignedSighashes[i])
 		if err != nil {
-			return nil, fmt.Errorf("error decoding SIGHASH %d: %v", i, err)
+			return nil, fmt.Errorf("error decoding SIGHASH: %v", err)
 		}
+		log.Println("Successfully decoded SIGHASH.")
+
+		// Parse the SIGHASH type from its hex representation
+		log.Println("Decoding SIGHASH type...")
+		sighashTypeBytes, err := hex.DecodeString(sighashTypes[i])
+		if err != nil {
+			return nil, fmt.Errorf("error decoding SIGHASH type: %v", err)
+		}
+		if len(sighashTypeBytes) != 1 {
+			return nil, fmt.Errorf("SIGHASH type must be a single byte")
+		}
+		log.Println("Successfully decoded SIGHASH type.")
 
 		// Sign the SIGHASH using the private key
+		log.Println("Signing SIGHASH with private key...")
 		signature, err := wif.PrivKey.Sign(sighashBytes)
 		if err != nil {
-			return nil, fmt.Errorf("error signing SIGHASH %d: %v", i, err)
+			return nil, fmt.Errorf("error signing SIGHASH with private key: %v", err)
 		}
+		log.Println("Successfully signed SIGHASH.")
 
-		// Convert the signature to DER format and encode it as a hex string
+		// Convert the signature to DER format
+		log.Println("Serializing the signature...")
 		signatureDER := signature.Serialize()
-		signatureHex := hex.EncodeToString(signatureDER)
+		log.Println("Successfully serialized the signature.")
+
+		// Add the SIGHASH type to the signature
+		log.Println("Appending SIGHASH type to signature...")
+		signatureWithSighashType := append(signatureDER, sighashTypeBytes[0])
+		log.Println("Successfully appended SIGHASH type to signature.")
+
+		// Encode the signature WITH SIGHASH TYPE as a hex string
+		log.Println("Encoding signature with SIGHASH type as hex...")
+		signatureHex := hex.EncodeToString(signatureWithSighashType)
+		log.Println("Successfully encoded signature with SIGHASH type as hex.")
 
 		signatures[i] = signatureHex
 	}
 
+	log.Println("Successfully processed all unsignedSighashes.")
 	return signatures, nil
 }
 
